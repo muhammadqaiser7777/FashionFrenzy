@@ -1,1 +1,12 @@
 /* You can add global styles to this file, and also import other style files */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Marcellus', serif;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}

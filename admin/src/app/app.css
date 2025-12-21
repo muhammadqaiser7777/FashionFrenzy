@@ -1,0 +1,18 @@
+/* Make the entire app take full height */
+html, body {
+  height: 100vh;
+  margin: 0;
+}
+
+/* Flexbox wrapper */
+.app-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* Grow the content so footer pushes down */
+.content {
+  flex: 1;
+}
