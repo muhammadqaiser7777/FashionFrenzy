@@ -52,7 +52,7 @@ def retailerSignup():
             return jsonify({"error": "Invalid email format"}), 400
 
         try:
-            existing_user = supabase.table("users").select("id").eq("email", email).execute()
+            existing_user = supabase.table("retailer").select("id").eq("email", email).execute()
             if existing_user.data:
                 return jsonify({"error": "Email is already registered"}), 400
         except Exception:
@@ -89,7 +89,7 @@ def retailerSignup():
         auth_token = generate_auth_token(email)
 
         try:
-            response = supabase.table("users").insert({
+            response = supabase.table("retailer").insert({
                 "email": email,
                 "full_name": full_name,
                 "password": hashed_password,
@@ -143,7 +143,7 @@ def retailerVerify():
             return jsonify({"error": "Invalid email format"}), 400
 
         try:
-            user_response = supabase.table("users").select("*").eq("email", email).execute()
+            user_response = supabase.table("retailer").select("*").eq("email", email).execute()
         except Exception:
             return jsonify({"error": "Database error while fetching user"}), 500
 
@@ -171,7 +171,7 @@ def retailerVerify():
             return jsonify({"error": "Invalid OTP"}), 400
 
         try:
-            supabase.table("users").update({
+            supabase.table("retailer").update({
                 "status": "Verified",
                 "otp": None,
                 "otp_purpose": None,
@@ -210,7 +210,7 @@ def retailerLogin():
             return jsonify({"error": "Invalid email format"}), 400
 
         try:
-            user_response = supabase.table("users").select("*").eq("email", email).execute()
+            user_response = supabase.table("retailer").select("*").eq("email", email).execute()
         except Exception:
             return jsonify({"error": "Database error while fetching user"}), 500
 
@@ -229,7 +229,7 @@ def retailerLogin():
             auth_token = generate_auth_token(email)
 
             try:
-                supabase.table("users").update({"auth_token": auth_token}).eq("email", email).execute()
+                supabase.table("retailer").update({"auth_token": auth_token}).eq("email", email).execute()
             except Exception:
                 return jsonify({"error": "Database error while updating auth token"}), 500
 
@@ -278,7 +278,7 @@ def retailerLogout():
             return jsonify({"error": "Invalid email format"}), 400
 
         try:
-            user_response = supabase.table("users").select("*").eq("email", email).execute()
+            user_response = supabase.table("retailer").select("*").eq("email", email).execute()
         except Exception:
             return jsonify({"error": "Database error while fetching user"}), 500
 
@@ -292,7 +292,7 @@ def retailerLogout():
             return jsonify({"error": "Invalid auth token"}), 400
 
         try:
-            supabase.table("users").update({"auth_token": None}).eq("email", email).execute()
+            supabase.table("retailer").update({"auth_token": None}).eq("email", email).execute()
         except Exception:
             return jsonify({"error": "Database error while updating auth token"}), 500
 

@@ -26,7 +26,7 @@ def retailerOtpRefresh():
 
         # Check if previous OTP exists
         try:
-            response = supabase.table("users").select("otp", "otp_purpose").eq("email", email).single().execute()
+            response = supabase.table("retailer").select("otp", "otp_purpose").eq("email", email).single().execute()
             user_info = response.data  # Extract data correctly
         except Exception:
             return jsonify({"error": "Database error while retrieving OTP data"}), 500
@@ -44,7 +44,7 @@ def retailerOtpRefresh():
 
         # Update database
         try:
-            response = supabase.table("users").update({"otp": hashed_otp, "otp_expiry": otp_expiry}).eq("email", email).execute()
+            response = supabase.table("retailer").update({"otp": hashed_otp, "otp_expiry": otp_expiry}).eq("email", email).execute()
         except Exception:
             return jsonify({"error": "Database error while updating OTP"}), 500
 
@@ -76,7 +76,7 @@ def retailerValidateOtp():
 
         # Fetch OTP expiry time from database
         try:
-            response = supabase.table("users").select("otp_expiry").eq("email", email).execute()
+            response = supabase.table("retailer").select("otp_expiry").eq("email", email).execute()
         except Exception:
             return jsonify({"error": "Database error while retrieving OTP expiry"}), 500
 

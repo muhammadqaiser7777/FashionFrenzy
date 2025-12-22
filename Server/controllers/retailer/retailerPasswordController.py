@@ -30,7 +30,7 @@ def retailerChangePassword():
             return jsonify({"error": "New password must be at least 8 characters long "}), 400
         
         # Fetch user by email
-        response = supabase.table("users").select("*").eq("email", email).execute()
+        response = supabase.table("retailer").select("*").eq("email", email).execute()
         user = response.data[0] if response.data else None
         
         if not user:
@@ -47,7 +47,7 @@ def retailerChangePassword():
         
         # Hash new password and update in database
         hashed_new_password = hash_password(new_password)
-        update_response = supabase.table("users").update({"password": hashed_new_password}).eq("email", email).execute()
+        update_response = supabase.table("retailer").update({"password": hashed_new_password}).eq("email", email).execute()
         
         if not update_response.data:
             return jsonify({"error": "Failed to update password"}), 500
@@ -77,7 +77,7 @@ def retailerPasswordForget():
             return jsonify({"error": "Invalid email format"}), 400
 
         # Fetch user details
-        response = supabase.table("users").select("*").eq("email", email).execute()
+        response = supabase.table("retailer").select("*").eq("email", email).execute()
         user = response.data[0] if response.data else None
 
         if not user:
@@ -94,7 +94,7 @@ def retailerPasswordForget():
         hashed_otp = hash_otp(otp_response)
 
         # Update all required fields in a single query
-        update_response = supabase.table("users").update({
+        update_response = supabase.table("retailer").update({
             "otp": hashed_otp,
             "otp_purpose": otp_purpose,
             "otp_expiry": otp_expiry
@@ -122,7 +122,7 @@ def retailerVerifyIdentity():
         otp = data["otp"]
 
         # Retrieve user data
-        response = supabase.table("users").select("otp, otp_purpose, otp_expiry").eq("email", email).execute()
+        response = supabase.table("retailer").select("otp, otp_purpose, otp_expiry").eq("email", email).execute()
         if not response.data:
             return jsonify({"error": "User not found."}), 404
 
@@ -156,7 +156,7 @@ def retailerVerifyIdentity():
         temp_token, expiry_time = generate_temp_token(email)
 
         # Update database with temp_token and temp_token_expiry
-        update_response = supabase.table("users").update({
+        update_response = supabase.table("retailer").update({
             "temp_token": temp_token,
             "temp_token_expiry": expiry_time
         }).eq("email", email).execute()
@@ -182,7 +182,7 @@ def retailerSetNewPassword():
         new_password = data["new_password"]
 
         # Retrieve user data
-        response = supabase.table("users").select("password, temp_token, temp_token_expiry").eq("email", email).execute()
+        response = supabase.table("retailer").select("password, temp_token, temp_token_expiry").eq("email", email).execute()
         if not response.data:
             return jsonify({"error": "User not found."}), 404
 
@@ -219,7 +219,7 @@ def retailerSetNewPassword():
         hashed_password = hash_password(new_password)
 
         # Update database with new password and remove temp values
-        update_response = supabase.table("users").update({
+        update_response = supabase.table("retailer").update({
             "password": hashed_password,
             "temp_token": None,
             "temp_token_expiry": None
