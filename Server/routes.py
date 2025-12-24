@@ -6,8 +6,8 @@ from controllers.user.passwordController import (
 )
 from controllers.user.otpController import otpRefresh, validate_otp
 
-from Server.controllers.retailer.retailerAuthController import retailerSignup, retailerVerify, retailerLogin, retailerLogout
-from Server.controllers.retailer.retailerPasswordController import (
+from controllers.retailer.retailerAuthController import retailerSignup, retailerVerify, retailerLogin, retailerLogout
+from controllers.retailer.retailerPasswordController import (
     retailerChangePassword, retailerPasswordForget, retailerVerifyIdentity, retailerSetNewPassword
 )
 from controllers.retailer.retailerOtpController import retailerOtpRefresh, retailerValidateOtp

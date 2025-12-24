@@ -59,8 +59,8 @@ def generate_temp_token_retailer(email):
     token = jwt.encode(dict(email=email, exp=expiry_time), TEMP_SECRET_KEY_RETAILER, algorithm="HS256")
     return token, expiry_time.isoformat()
 
-def generate_auth_token_retailer(username):
+def generate_auth_token_admin(username):
     """Generate a non-expiring JWT token using username."""
     payload = {"username": username}
-    token = jwt.encode(payload, SECRET_KEY_RETAILER, algorithm="HS256")
+    token = jwt.encode(payload, SECRET_KEY_ADMIN, algorithm="HS256")
     return token

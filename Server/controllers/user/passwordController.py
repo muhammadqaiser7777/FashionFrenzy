@@ -4,7 +4,7 @@ from config.supabaseConfig import supabase
 from config.mailConfig import confirmation, generate_otp
 from datetime import datetime, timedelta
 from middleware.encrypt import hash_otp, check_otp  # Import the hash_otp function
-from middleware.authToken import generate_temp_token
+from middleware.authToken import generate_temp_token_user as generate_temp_token
 from datetime import datetime, timedelta
 import re
 

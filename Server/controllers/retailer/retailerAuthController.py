@@ -3,7 +3,7 @@ from flask import request, jsonify # type: ignore
 from config.supabaseConfig import supabase
 from config.mailConfig import generate_otp
 from middleware.encrypt import hash_password, hash_otp, check_otp, check_password
-from middleware.authToken import generate_auth_token
+from middleware.authToken import generate_auth_token_retailer as generate_auth_token
 from email_validator import validate_email, EmailNotValidError # type: ignore
 import os
 import random

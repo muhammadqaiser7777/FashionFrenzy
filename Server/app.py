@@ -6,16 +6,16 @@ import routes
 from dotenv import load_dotenv  # type: ignore
 import os
 
-# For scheduling
-from apscheduler.schedulers.background import BackgroundScheduler  # type: ignore
-from controllers.mailReminderController import check_and_send_reminders
 
 # Load environment variables
 load_dotenv()
-WEB_URL = os.getenv("WEB_URL")
+WEB_URL1 = os.getenv("WEB_URL1")
+WEB_URL2 = os.getenv("WEB_URL2")
+WEB_URL3 = os.getenv("WEB_URL3")
+
 
 app = Flask(__name__, static_url_path='/static')
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": "[WEB_URL1, WEB_URL2, WEB_URL3]"}})
 
 app.config["SECRET_KEY"] = SECRET_KEY  # Use imported SECRET_KEY
 
@@ -24,16 +24,6 @@ mail.init_app(app)
 
 # Register all routes from routes.py
 app.register_blueprint(routes.routes)
-
-# Wrap reminder function in application context
-def run_reminder_job():
-    with app.app_context():
-        check_and_send_reminders()
-
-# Setup APScheduler
-scheduler = BackgroundScheduler()
-scheduler.add_job(run_reminder_job, 'interval', hours=1)  # For testing
-scheduler.start()
 
 
 if __name__ == "__main__":
