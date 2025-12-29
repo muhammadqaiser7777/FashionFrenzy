@@ -11,8 +11,12 @@ from controllers.retailer.retailerPasswordController import (
     retailerChangePassword, retailerPasswordForget, retailerVerifyIdentity, retailerSetNewPassword
 )
 from controllers.retailer.retailerOtpController import retailerOtpRefresh, retailerValidateOtp
+from controllers.retailer.productController import add_product, view_products, edit_product, delete_product
+from controllers.retailer.orderController import view_orders, confirm_order, reject_order, dashboard
 
 from controllers.admin.adminAuthController import adminLogin, adminLogout
+from controllers.admin.productStatusController import view_pending_products, view_approved_products, view_rejected_products, edit_product_status
+from controllers.admin.ordersStatusController import view_all_orders, edit_order_status, admin_dashboard
 # Initialize Blueprint
 routes = Blueprint("routes", __name__)
 
@@ -23,6 +27,31 @@ routes.route("/admin/login", methods=["POST"])(adminLogin)
 
 # Invalidates admin token to log out
 routes.route("/admin/logout", methods=["POST"])(adminLogout)
+
+# ===================== 🔐 Admin Product Management Routes =====================
+
+# View pending products
+routes.route("/admin/view-pending-products", methods=["POST"])(view_pending_products)
+
+# View approved products
+routes.route("/admin/view-approved-products", methods=["POST"])(view_approved_products)
+
+# View rejected products
+routes.route("/admin/view-rejected-products", methods=["POST"])(view_rejected_products)
+
+# Edit product status
+routes.route("/admin/edit-product-status", methods=["POST"])(edit_product_status)
+
+# ===================== 🔐 Admin Order Management Routes =====================
+
+# View all orders
+routes.route("/admin/view-all-orders", methods=["POST"])(view_all_orders)
+
+# Edit order status
+routes.route("/admin/edit-order-status", methods=["POST"])(edit_order_status)
+
+# Get admin dashboard stats
+routes.route("/admin/dashboard", methods=["POST"])(admin_dashboard)
 
 # ===================== 🔐 User Authentication Routes =====================
 
@@ -98,3 +127,31 @@ routes.route("/retailer/otp-refresh", methods=["POST"])(retailerOtpRefresh)
 
 # Validates entered OTP against stored value
 routes.route("/retailer/validate-otp", methods=["POST"])(retailerValidateOtp)
+
+# ===================== 🔐 Retailer Product Management Routes =====================
+
+# Add a new product
+routes.route("/retailer/add-product", methods=["POST"])(add_product)
+
+# View existing products
+routes.route("/retailer/view-products", methods=["POST"])(view_products)
+
+# Edit a product
+routes.route("/retailer/edit-product", methods=["POST"])(edit_product)
+
+# Delete a product
+routes.route("/retailer/delete-product", methods=["POST"])(delete_product)
+
+# ===================== 🔐 Retailer Order Management Routes =====================
+
+# View coming orders
+routes.route("/retailer/view-orders", methods=["POST"])(view_orders)
+
+# Confirm an order
+routes.route("/retailer/confirm-order", methods=["POST"])(confirm_order)
+
+# Reject an order
+routes.route("/retailer/reject-order", methods=["POST"])(reject_order)
+
+# Get dashboard stats
+routes.route("/retailer/dashboard", methods=["POST"])(dashboard)

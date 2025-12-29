@@ -64,3 +64,39 @@ def generate_auth_token_admin(username):
     payload = {"username": username}
     token = jwt.encode(payload, SECRET_KEY_ADMIN, algorithm="HS256")
     return token
+
+def verify_retailer_token(auth_token):
+    """Verify retailer auth_token and return email if valid."""
+    try:
+        payload = jwt.decode(auth_token, SECRET_KEY_RETAILER, algorithms=["HS256"])
+        email = payload.get("email")
+        if not email:
+            return None
+        # Optionally, check if token exists in DB, but since it's non-expiring, maybe not necessary
+        # But per user request, check in table
+        from config.supabaseConfig import supabase
+        user_response = supabase.table("retailers").select("email").eq("auth_token", auth_token).execute()
+        if user_response.data:
+            return user_response.data[0]["email"]
+        return None
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+
+def verify_admin_token(auth_token):
+    """Verify admin auth_token and return username if valid."""
+    try:
+        payload = jwt.decode(auth_token, SECRET_KEY_ADMIN, algorithms=["HS256"])
+        username = payload.get("username")
+        if not username:
+            return None
+        from config.supabaseConfig import supabase
+        admin_response = supabase.table("admins").select("username").eq("auth_token", auth_token).execute()
+        if admin_response.data:
+            return admin_response.data[0]["username"]
+        return None
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
