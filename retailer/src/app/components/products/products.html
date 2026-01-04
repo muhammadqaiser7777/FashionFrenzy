@@ -73,10 +73,10 @@
             <span class="current-price" *ngIf="product.discounted_price && product.discounted_price < product.price">
               {{ formatCurrency(product.discounted_price) }}
             </span>
-            <span class="current-price" [class.original]="product.discounted_price">
+            <span class="original-price" *ngIf="product.discounted_price && product.discounted_price < product.price">
               {{ formatCurrency(product.price) }}
             </span>
-            <span class="original-price" *ngIf="product.discounted_price && product.discounted_price < product.price">
+            <span class="current-price" *ngIf="!product.discounted_price || product.discounted_price >= product.price">
               {{ formatCurrency(product.price) }}
             </span>
           </div>

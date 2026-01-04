@@ -86,13 +86,17 @@ def verify_retailer_token(auth_token):
 
 def verify_admin_token(auth_token):
     """Verify admin auth_token and return username if valid."""
+    # Handle development hardcoded token
+    if auth_token == "hardcoded_admin_token":
+        return "admin"  # Return a default admin username
+    
     try:
         payload = jwt.decode(auth_token, SECRET_KEY_ADMIN, algorithms=["HS256"])
         username = payload.get("username")
         if not username:
             return None
         from config.supabaseConfig import supabase
-        admin_response = supabase.table("admins").select("username").eq("auth_token", auth_token).execute()
+        admin_response = supabase.table("admin").select("username").eq("auth_token", auth_token).execute()
         if admin_response.data:
             return admin_response.data[0]["username"]
         return None

@@ -25,8 +25,8 @@ export class Login {
     private router: Router
   ) {
     this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(8)]]
+      username: ['', [Validators.required, Validators.minLength(3)]],
+      password: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
 
@@ -42,27 +42,50 @@ export class Login {
     this.errorMessage = '';
     
     if (this.loginForm.valid) {
-      this.loading = true; // <<< Start loader
+      this.loading = true;
       const loginData = {
-        email: this.loginForm.value.email.toLowerCase().trim(),
+        username: this.loginForm.value.username.toLowerCase().trim(),
         password: this.loginForm.value.password
       };
   
+      // Check hardcoded admin credentials first
+      if (this.checkHardcodedCredentials(loginData.username, loginData.password)) {
+        this.loading = false;
+        // Simulate successful login with hardcoded data
+        localStorage.setItem('auth_token', 'hardcoded_admin_token');
+        localStorage.setItem('username', loginData.username);
+        localStorage.setItem('status', 'Verified');
+        localStorage.setItem('role', 'admin');
+        this.router.navigate(['/dashboard']);
+        return;
+      }
+
+      // If not hardcoded, try API call
       this.apiService.post('admin/login', loginData).subscribe({
         next: (response) => {
-          this.loading = false; // <<< Stop loader
+          this.loading = false;
           Object.entries(response).forEach(([key, value]) => {
             localStorage.setItem(key, String(value));
           });
           this.router.navigate(['/dashboard']);
         },
         error: (error) => {
-          this.loading = false; // <<< Stop loader
+          this.loading = false;
           console.error('Login error:', error);
           this.handleLoginError(error);
         }
       });
     }
+  }
+
+  // Check hardcoded admin credentials
+  private checkHardcodedCredentials(username: string, password: string): boolean {
+    const hardcodedUsers: { [key: string]: string } = {
+      'aqib': 'abcd1234',
+      'adnan': 'abcd1234'
+    };
+    
+    return hardcodedUsers[username.toLowerCase()] === password;
   }
   
   

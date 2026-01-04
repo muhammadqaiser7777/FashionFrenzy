@@ -36,13 +36,7 @@
       <i class="icon">📋</i>
       Orders
     </button>
-    <button 
-      class="nav-tab" 
-      [class.active]="activeTab === 'analytics'"
-      (click)="setActiveTab('analytics')">
-      <i class="icon">📈</i>
-      Analytics
-    </button>
+
   </div>
 </nav>
 
@@ -165,28 +159,89 @@
     <div *ngIf="activeTab === 'products'" class="tab-content">
       <div class="section-header">
         <h2>Product Management</h2>
-        <button class="btn-primary" (click)="navigateToProducts()">
-          <i class="icon">➕</i>
-          Add New Product
-        </button>
-      </div>
-      
-      <div class="coming-soon">
-        <div class="coming-soon-content">
-          <h3>🚀 Advanced Product Management</h3>
-          <p>Complete product management interface is being built...</p>
-          <ul>
-            <li>✅ Product listing and search</li>
-            <li>✅ Add/Edit products with image upload</li>
-            <li>✅ Inventory management</li>
-            <li>✅ Category management</li>
-            <li>🔄 Stock alerts and low inventory warnings</li>
-          </ul>
-          <button class="btn-secondary" (click)="navigateToProducts()">
-            View Basic Products Page
+        <div class="header-actions">
+          <button class="btn-secondary" (click)="loadProducts()" [disabled]="isLoadingProducts">
+            <i class="icon">🔄</i>
+            {{ isLoadingProducts ? 'Loading...' : 'Refresh' }}
+          </button>
+          <button class="btn-primary" (click)="navigateToProducts()">
+            <i class="icon">➕</i>
+            Add New Product
           </button>
         </div>
       </div>
+      
+      <!-- Products Grid -->
+      <div class="products-grid" *ngIf="!isLoadingProducts; else loadingProductsTemplate">
+        <div class="product-card" *ngFor="let product of products">
+          <div class="product-image">
+            <img 
+              *ngIf="product.images && product.images.length > 0" 
+              [src]="getProductImageUrl(product)" 
+              [alt]="product.title"
+              class="product-img"
+              (error)="handleImageError($event)">
+            <div *ngIf="!product.images || product.images.length === 0" class="no-image">
+              📷
+            </div>
+            
+            <div class="stock-badge" [style.background-color]="getStockColor(product.stock)">
+              {{ getStockStatus(product.stock) }}
+            </div>
+          </div>
+          
+          <div class="product-info">
+            <h3 class="product-title">{{ product.title }}</h3>
+            <p class="product-category">{{ product.category }}</p>
+            <p class="product-description">{{ product.description }}</p>
+            
+            <div class="product-pricing">
+              <span class="current-price" *ngIf="product.discounted_price && product.discounted_price < product.price">
+                {{ formatCurrency(product.discounted_price) }}
+              </span>
+              <span class="original-price" *ngIf="product.discounted_price && product.discounted_price < product.price">
+                {{ formatCurrency(product.price) }}
+              </span>
+              <span class="current-price" *ngIf="!product.discounted_price || product.discounted_price >= product.price">
+                {{ formatCurrency(product.price) }}
+              </span>
+            </div>
+            
+            <div class="product-stock">
+              <span class="stock-info">Stock: {{ product.stock }} units</span>
+            </div>
+            
+            <div class="product-actions">
+              <button class="edit-btn" (click)="openEditProduct(product)">
+                <i class="icon">✏️</i>
+                Edit
+              </button>
+              <button class="delete-btn" (click)="deleteProduct(product)">
+                <i class="icon">🗑️</i>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div *ngIf="products.length === 0" class="no-products">
+          <div class="no-products-content">
+            <h3>No products found</h3>
+            <p>Start by adding your first product to your store.</p>
+            <button class="add-first-product-btn" (click)="navigateToProducts()">
+              Add Your First Product
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading Products Template -->
+      <ng-template #loadingProductsTemplate>
+        <div class="loading-container">
+          <div class="loading-spinner"></div>
+          <p>Loading products...</p>
+        </div>
+      </ng-template>
     </div>
 
     <!-- Orders Tab -->
@@ -218,42 +273,7 @@
       </div>
     </div>
 
-    <!-- Analytics Tab -->
-    <div *ngIf="activeTab === 'analytics'" class="tab-content">
-      <div class="section-header">
-        <h2>Analytics & Reports</h2>
-      </div>
-      
-      <div class="coming-soon">
-        <div class="coming-soon-content">
-          <h3>📊 Advanced Analytics Dashboard</h3>
-          <p>Comprehensive analytics and reporting features are being built...</p>
-          <ul>
-            <li>📈 Revenue charts and trends</li>
-            <li>📊 Sales performance metrics</li>
-            <li>🎯 Product performance analysis</li>
-            <li>📅 Monthly/Quarterly reports</li>
-            <li>🔍 Customer behavior insights</li>
-            <li>💡 Inventory optimization suggestions</li>
-          </ul>
-          
-          <!-- Revenue Chart Placeholder -->
-          <div class="chart-placeholder">
-            <h4>Monthly Revenue Trend</h4>
-            <div class="chart-container">
-              <div class="chart-bars">
-                <div 
-                  *ngFor="let month of stats.monthly_revenue" 
-                  class="chart-bar"
-                  [style.height.%]="getChartHeightPercentage(month)">
-                  <span class="bar-label">{{ month.month.split('-')[1] }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+
 
   </div>
 
