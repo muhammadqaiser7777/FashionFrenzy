@@ -1,0 +1,253 @@
+<!-- Header -->
+<header class="orders-header">
+  <div class="header-content">
+    <div class="breadcrumb">
+      <button class="back-btn" (click)="navigateBack()">← Back to Dashboard</button>
+      <h1>Order Management</h1>
+    </div>
+    <div class="header-actions">
+      <button class="refresh-btn" (click)="loadOrders()">
+        <i class="icon">🔄</i>
+        Refresh
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Main Content -->
+<main class="orders-main">
+  <div class="container">
+    
+    <!-- Filters and Search -->
+    <div class="filters-section">
+      <div class="search-box">
+        <input 
+          type="text" 
+          placeholder="Search orders..." 
+          [(ngModel)]="searchTerm"
+          class="search-input">
+        <i class="search-icon">🔍</i>
+      </div>
+      
+      <div class="filter-controls">
+        <select [(ngModel)]="statusFilter" class="filter-select">
+          <option *ngFor="let status of statusOptions" [value]="status.value">{{ status.label }}</option>
+        </select>
+        
+        <input 
+          type="date" 
+          [(ngModel)]="dateFilter" 
+          class="filter-date"
+          placeholder="Filter by date">
+        
+        <select [(ngModel)]="sortBy" class="filter-select">
+          <option value="created_at">Sort by Date</option>
+          <option value="id">Sort by Order ID</option>
+          <option value="user_email">Sort by Customer</option>
+          <option value="total_amount">Sort by Amount</option>
+          <option value="delivery_status">Sort by Status</option>
+        </select>
+        
+        <button class="sort-order-btn" (click)="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'">
+          {{ sortOrder === 'asc' ? '↑' : '↓' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Orders List -->
+    <div class="orders-container" *ngIf="!isLoading; else loadingTemplate">
+      <div class="orders-table" *ngIf="filteredOrders.length > 0">
+        <div class="table-header">
+          <div class="table-row">
+            <div class="table-cell">Order ID</div>
+            <div class="table-cell">Customer</div>
+            <div class="table-cell">Date</div>
+            <div class="table-cell">Items</div>
+            <div class="table-cell">Amount</div>
+            <div class="table-cell">Status</div>
+            <div class="table-cell">Actions</div>
+          </div>
+        </div>
+        
+        <div class="table-body">
+          <div class="table-row" *ngFor="let order of filteredOrders">
+            <div class="table-cell">
+              <span class="order-id">#{{ order.id }}</span>
+            </div>
+            <div class="table-cell">
+              <span class="customer-email">{{ order.user_email }}</span>
+            </div>
+            <div class="table-cell">
+              <span class="order-date">{{ formatDate(order.created_at) }}</span>
+            </div>
+            <div class="table-cell">
+              <span class="items-count">{{ order.items.length || 0 }} items</span>
+            </div>
+            <div class="table-cell">
+              <span class="order-amount">{{ formatCurrency(order.total_amount) }}</span>
+            </div>
+            <div class="table-cell">
+              <span class="status-badge" [ngClass]="getStatusBadgeClass(order.delivery_status)" [style.background-color]="getStatusColor(order.delivery_status)">
+                {{ order.delivery_status }}
+              </span>
+            </div>
+            <div class="table-cell">
+              <div class="action-buttons">
+                <button class="view-btn" (click)="showOrderDetails(order)">
+                  <i class="icon">👁️</i>
+                </button>
+                <button 
+                  class="confirm-btn" 
+                  (click)="confirmOrder(order)"
+                  [disabled]="!canConfirmOrder(order)">
+                  <i class="icon">✓</i>
+                </button>
+                <button 
+                  class="reject-btn" 
+                  (click)="openRejectModal(order)"
+                  [disabled]="!canRejectOrder(order)">
+                  <i class="icon">✗</i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div *ngIf="filteredOrders.length === 0" class="no-orders">
+        <div class="no-orders-content">
+          <h3>No orders found</h3>
+          <p>Orders will appear here when customers place them.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Order Details Modal -->
+<div class="modal-overlay" *ngIf="showOrderModal && selectedOrder" (click)="closeOrderModal()">
+  <div class="modal-content order-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Order Details #{{ selectedOrder.id }}</h2>
+      <button class="close-btn" (click)="closeOrderModal()">×</button>
+    </div>
+    
+    <div class="modal-body">
+      <!-- Order Information -->
+      <div class="order-info-section">
+        <h3>Order Information</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Customer Email:</label>
+            <span>{{ selectedOrder.user_email }}</span>
+          </div>
+          <div class="info-item">
+            <label>Order Date:</label>
+            <span>{{ formatDate(selectedOrder.created_at) }}</span>
+          </div>
+          <div class="info-item">
+            <label>Total Amount:</label>
+            <span class="amount">{{ formatCurrency(selectedOrder.total_amount) }}</span>
+          </div>
+          <div class="info-item">
+            <label>Status:</label>
+            <span class="status-badge" [ngClass]="getStatusBadgeClass(selectedOrder.delivery_status)" [style.background-color]="getStatusColor(selectedOrder.delivery_status)">
+              {{ selectedOrder.delivery_status }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Items -->
+      <div class="order-items-section">
+        <h3>Order Items</h3>
+        <div class="items-list">
+          <div class="item-card" *ngFor="let item of selectedOrder.items">
+            <div class="item-image">
+              <img 
+                *ngIf="item.product_image" 
+                [src]="item.product_image" 
+                [alt]="item.product_title"
+                class="item-img">
+              <div *ngIf="!item.product_image" class="no-image">
+                📷
+              </div>
+            </div>
+            <div class="item-details">
+              <h4 class="item-title">{{ item.product_title }}</h4>
+              <div class="item-info">
+                <span class="quantity">Qty: {{ item.quantity }}</span>
+                <span class="subtotal">{{ formatCurrency(item.subtotal) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Actions -->
+      <div class="order-actions-section" *ngIf="canConfirmOrder(selectedOrder) || canRejectOrder(selectedOrder)">
+        <h3>Order Actions</h3>
+        <div class="action-buttons-modal">
+          <button 
+            class="confirm-order-btn" 
+            (click)="confirmOrder(selectedOrder)"
+            [disabled]="!canConfirmOrder(selectedOrder)">
+            <i class="icon">✓</i>
+            Confirm Order
+          </button>
+          <button 
+            class="reject-order-btn" 
+            (click)="openRejectModal(selectedOrder)"
+            [disabled]="!canRejectOrder(selectedOrder)">
+            <i class="icon">✗</i>
+            Reject Order
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Reject Order Modal -->
+<div class="modal-overlay" *ngIf="showRejectModal && selectedOrder" (click)="closeRejectModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Reject Order #{{ selectedOrder.id }}</h2>
+      <button class="close-btn" (click)="closeRejectModal()">×</button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="reject-form">
+        <p class="reject-description">
+          Please provide a reason for rejecting this order:
+        </p>
+        
+        <div class="form-group">
+          <label for="rejectReason">Rejection Reason *</label>
+          <textarea 
+            id="rejectReason" 
+            [(ngModel)]="rejectReason" 
+            placeholder="Enter the reason for rejection..."
+            rows="4"
+            required></textarea>
+        </div>
+        
+        <div class="form-actions">
+          <button type="button" class="cancel-btn" (click)="closeRejectModal()">Cancel</button>
+          <button type="button" class="reject-confirm-btn" (click)="rejectOrder()" [disabled]="!rejectReason.trim()">
+            Reject Order
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Template -->
+<ng-template #loadingTemplate>
+  <div class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Loading orders...</p>
+  </div>
+</ng-template>

@@ -1,66 +1,53 @@
-<div class="container">
+<div class="container"> <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="form"> <div class="logo-center">
+      <div class="logo">
+        <img src="assets/Logos/Ready-Crop-Logo-Transparent.ico" alt="Ready Crop Logo" id="logo">
+      </div>
+    </div>
 
-    <div *ngIf="loading" class="loader-overlay">
-        <div class="loader"></div>
-    </div>      
-    <form class="form" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-        <div class="logo-center">
-            <div class="logo">
-                <img src="../../../assets/Logos/Ready-Crop-Logo-Transparent (1).ico" alt="Ready Crop Logo" id="logo">
-            </div>
-        </div>
+    <h2 class="form-title">Retailer Login</h2>
 
-        <h2 class="form-title">Login</h2>
+    <div class="error-message" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
 
-        <div class="input-container">
-            <label>Email</label>
-            <div class="inputForm">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 32 32"> 
-                    <g data-name="Layer 3" id="Layer_3"> <path d="m30.853 13.87a15 15 0 0 0 -29.729 4.082 15.1 15.1 0 0 0 12.876 12.918 15.6 15.6 0 0 0 2.016.13 14.85 14.85 0 0 0 7.715-2.145 1 1 0 1 0 -1.031-1.711 13.007 13.007 0 1 1 5.458-6.529 2.149 2.149 0 0 1 -4.158-.759v-10.856a1 1 0 0 0 -2 0v1.726a8 8 0 1 0 .2 10.325 4.135 4.135 0 0 0 7.83.274 15.2 15.2 0 0 0 .823-7.455zm-14.853 8.13a6 6 0 1 1 6-6 6.006 6.006 0 0 1 -6 6z"></path> </g> 
-                </svg>
-                <input formControlName="email" placeholder="Enter your Email" class="input" type="email">
-            </div>
-        </div>
+    <div class="input-container">
+      <label>Email Address</label>
+      <div class="inputForm">
+        <input type="email" formControlName="email" placeholder="email@example.com" class="input">
+      </div>
+    </div>
 
-        <div class="input-container">
-            <label>Password</label>
-            <div class="inputForm">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="-64 0 512 512">
-                <path d="m336 512h-288c-26.453125 0-48-21.523438-48-48v-224c0-26.476562 21.546875-48 48-48h288c26.453125 0 48 21.523438 48 48v224c0 26.476562-21.546875 48-48 48zm-288-288c-8.8125 0-16 7.167969-16 16v224c0 8.832031 7.1875 16 16 16h288c8.8125 0 16-7.167969 16-16v-224c0-8.832031-7.1875-16-16-16zm0 0"/>
-                <path d="m304 224c-8.832031 0-16-7.167969-16-16v-80c0-52.929688-43.070312-96-96-96s-96 43.070312-96 96v80c0 8.832031-7.167969 16-16 16s-16-7.167969-16-16v-80c0-70.59375 57.40625-128 128-128s128 57.40625 128 128v80c0 8.832031-7.167969 16-16 16zm0 0"/>
-                </svg>
-                <input formControlName="password" placeholder="Enter your Password" class="input" 
-                    [type]="showPassword ? 'text' : 'password'">
-                <span class="eye-icon" (click)="togglePassword()">
-                <svg *ngIf="!showPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-eye-fill" viewBox="0 0 16 16">
-                    <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0"/>
-                    <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8m8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7"/>
-                </svg>
-                <svg *ngIf="showPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-eye-slash-fill" viewBox="0 0 16 16">
-                    <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7 7 0 0 0 2.79-.588M5.21 3.088A7 7 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474z"/>
-                    <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12z"/>
-                </svg>
-                </span>
-            </div>
-            <div *ngIf="passwordControl?.hasError('minlength') && (passwordControl?.touched || passwordControl?.dirty)"
-                class="error-message">
-                Password must be at least 8 characters long
-            </div>
-            </div>
+    <div class="input-container">
+      <label>Password</label>
+      <div class="inputForm">
+        <input [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="********" class="input">
+        <span class="eye-icon" (click)="togglePassword()">
+          <svg *ngIf="!showPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0"/>
+            <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8m8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7"/>
+          </svg>
+          <svg *ngIf="showPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+            <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7 7 0 0 0 2.79-.588M5.21 3.088A7 7 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474z"/>
+            <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12z"/>
+          </svg>
+        </span>
+      </div>
+    </div>
 
-        
-        <div *ngIf="errorMessage" class="error-message">
-            {{ errorMessage }}
-        </div>
-        
-        <span class="forgot-password" (click)="onForgotPasswordClick()">Forgot password?</span>
+    <p class="p" (click)="onForgotPasswordClick()" style="cursor: pointer; text-align: right; margin-top: -10px;">
+      Forgot Password?
+    </p>
 
-        <button class="button-submit" type="submit" [disabled]="!loginForm.valid" (click)="onSubmit()">Log In</button>
+    <button type="submit" [disabled]="loginForm.invalid || loading" class="button-submit">
+      <span *ngIf="!loading">Login</span>
+      <span *ngIf="loading" class="loader"></span>
+    </button>
 
-
-        <p class="p">
-            Don't have an account?
-            <span class="signup-link" (click)="onSignupClick()">Sign Up</span>
-        </p>      
-    </form>
+    <p class="p">
+      Don't have an account? 
+      <span class="login-link" (click)="onSignupClick()" style="cursor: pointer; color: blue;">
+        Sign Up
+      </span>
+    </p>
+  </form>
 </div>

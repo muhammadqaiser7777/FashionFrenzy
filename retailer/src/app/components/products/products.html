@@ -1,0 +1,273 @@
+<!-- Header -->
+<header class="products-header">
+  <div class="header-content">
+    <div class="breadcrumb">
+      <button class="back-btn" (click)="navigateBack()">← Back to Dashboard</button>
+      <h1>Product Management</h1>
+    </div>
+    <button class="add-product-btn" (click)="openAddForm()">
+      <i class="icon">➕</i>
+      Add Product
+    </button>
+  </div>
+</header>
+
+<!-- Main Content -->
+<main class="products-main">
+  <div class="container">
+    
+    <!-- Filters and Search -->
+    <div class="filters-section">
+      <div class="search-box">
+        <input 
+          type="text" 
+          placeholder="Search products..." 
+          [(ngModel)]="searchTerm"
+          class="search-input">
+        <i class="search-icon">🔍</i>
+      </div>
+      
+      <div class="filter-controls">
+        <select [(ngModel)]="selectedCategory" class="filter-select">
+          <option value="">All Categories</option>
+          <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+        </select>
+        
+        <select [(ngModel)]="sortBy" class="filter-select">
+          <option value="created_at">Sort by Date</option>
+          <option value="title">Sort by Name</option>
+          <option value="price">Sort by Price</option>
+          <option value="stock">Sort by Stock</option>
+        </select>
+        
+        <button class="sort-order-btn" (click)="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'">
+          {{ sortOrder === 'asc' ? '↑' : '↓' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="products-grid" *ngIf="!isLoading; else loadingTemplate">
+      <div class="product-card" *ngFor="let product of filteredProducts">
+        <div class="product-image">
+          <img 
+            *ngIf="product.images && product.images.length > 0" 
+            [src]="getProductImageUrl(product)" 
+            [alt]="product.title"
+            class="product-img">
+          <div *ngIf="!product.images || product.images.length === 0" class="no-image">
+            📷
+          </div>
+          
+          <div class="stock-badge" [style.background-color]="getStockColor(product.stock)">
+            {{ getStockStatus(product.stock) }}
+          </div>
+        </div>
+        
+        <div class="product-info">
+          <h3 class="product-title">{{ product.title }}</h3>
+          <p class="product-category">{{ product.category }}</p>
+          <p class="product-description">{{ product.description }}</p>
+          
+          <div class="product-pricing">
+            <span class="current-price" *ngIf="product.discounted_price && product.discounted_price < product.price">
+              {{ formatCurrency(product.discounted_price) }}
+            </span>
+            <span class="current-price" [class.original]="product.discounted_price">
+              {{ formatCurrency(product.price) }}
+            </span>
+            <span class="original-price" *ngIf="product.discounted_price && product.discounted_price < product.price">
+              {{ formatCurrency(product.price) }}
+            </span>
+          </div>
+          
+          <div class="product-stock">
+            <span class="stock-info">Stock: {{ product.stock }} units</span>
+          </div>
+          
+          <div class="product-actions">
+            <button class="edit-btn" (click)="openEditForm(product)">
+              <i class="icon">✏️</i>
+              Edit
+            </button>
+            <button class="delete-btn" (click)="deleteProduct(product)">
+              <i class="icon">🗑️</i>
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div *ngIf="filteredProducts.length === 0" class="no-products">
+        <div class="no-products-content">
+          <h3>No products found</h3>
+          <p>Start by adding your first product to your store.</p>
+          <button class="add-first-product-btn" (click)="openAddForm()">
+            Add Your First Product
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Add/Edit Product Modal -->
+<div class="modal-overlay" *ngIf="showAddForm || showEditForm" (click)="closeForms()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ showEditForm ? 'Edit Product' : 'Add New Product' }}</h2>
+      <button class="close-btn" (click)="closeForms()">×</button>
+    </div>
+    
+    <form class="product-form" (ngSubmit)="submitForm()">
+      <!-- Basic Information -->
+      <div class="form-section">
+        <h3>Basic Information</h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="title">Product Title *</label>
+            <input 
+              type="text" 
+              id="title" 
+              [(ngModel)]="formData.title" 
+              name="title"
+              placeholder="Enter product title"
+              required>
+          </div>
+          
+          <div class="form-group">
+            <label for="category">Category *</label>
+            <select id="category" [(ngModel)]="formData.category" name="category" required>
+              <option value="">Select Category</option>
+              <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea 
+            id="description" 
+            [(ngModel)]="formData.description" 
+            name="description"
+            placeholder="Enter product description"
+            rows="4"></textarea>
+        </div>
+      </div>
+
+      <!-- Pricing -->
+      <div class="form-section">
+        <h3>Pricing</h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="price">Regular Price *</label>
+            <input 
+              type="number" 
+              id="price" 
+              [(ngModel)]="formData.price" 
+              name="price"
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+              required>
+          </div>
+          
+          <div class="form-group">
+            <label for="discounted_price">Sale Price</label>
+            <input 
+              type="number" 
+              id="discounted_price" 
+              [(ngModel)]="formData.discounted_price" 
+              name="discounted_price"
+              placeholder="0.00"
+              min="0"
+              step="0.01">
+          </div>
+        </div>
+      </div>
+
+      <!-- Inventory -->
+      <div class="form-section">
+        <h3>Inventory</h3>
+        
+        <div class="form-group">
+          <label for="stock">Stock Quantity *</label>
+          <input 
+            type="number" 
+            id="stock" 
+            [(ngModel)]="formData.stock" 
+            name="stock"
+            placeholder="0"
+            min="0"
+            required>
+        </div>
+      </div>
+
+      <!-- Images -->
+      <div class="form-section">
+        <h3>Product Images *</h3>
+        
+        <div class="image-upload-area">
+          <input 
+            type="file" 
+            id="images" 
+            (change)="onImageSelect($event)"
+            accept="image/*"
+            multiple
+            style="display: none;">
+          <label for="images" class="upload-label">
+            <i class="upload-icon">📷</i>
+            <span>Click to upload images or drag and drop</span>
+            <small>PNG, JPG, JPEG, GIF, WebP up to 5MB each</small>
+          </label>
+        </div>
+        
+        <!-- Image Previews -->
+        <div class="image-previews" *ngIf="selectedImages.length > 0">
+          <div class="image-preview" *ngFor="let image of selectedImages; let i = index">
+            <img [src]="image.preview || image.url" [alt]="'Preview ' + (i + 1)" class="preview-img">
+            <div class="image-actions">
+              <button 
+                type="button" 
+                class="primary-btn" 
+                (click)="setPrimaryImage(i)"
+                [class.active]="image.is_primary">
+                {{ image.is_primary ? '★ Primary' : '☆ Set Primary' }}
+              </button>
+              <button 
+                type="button" 
+                class="delete-img-btn" 
+                (click)="removeImage(i)">
+                🗑️
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button type="button" class="cancel-btn" (click)="closeForms()">Cancel</button>
+        <button type="submit" class="submit-btn" [disabled]="imageUploadInProgress">
+          <span *ngIf="!imageUploadInProgress">
+            {{ showEditForm ? 'Update Product' : 'Add Product' }}
+          </span>
+          <span *ngIf="imageUploadInProgress">
+            {{ showEditForm ? 'Updating...' : 'Adding...' }}
+          </span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Loading Template -->
+<ng-template #loadingTemplate>
+  <div class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Loading products...</p>
+  </div>
+</ng-template>

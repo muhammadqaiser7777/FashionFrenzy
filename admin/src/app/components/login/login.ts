@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ApiService } from '../../services/back-end-service';
 
 @Component({
@@ -16,13 +17,12 @@ export class Login {
   errorMessage: string = '';
   loading: boolean = false;
 
-  @Output() signupClicked = new EventEmitter<void>();
-  @Output() forgotPasswordClicked = new EventEmitter<void>();
   @Output() loginSuccess = new EventEmitter<void>();
 
   constructor(
     private fb: FormBuilder,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private router: Router
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -48,13 +48,13 @@ export class Login {
         password: this.loginForm.value.password
       };
   
-      this.apiService.post('login', loginData).subscribe({
+      this.apiService.post('admin/login', loginData).subscribe({
         next: (response) => {
           this.loading = false; // <<< Stop loader
           Object.entries(response).forEach(([key, value]) => {
             localStorage.setItem(key, String(value));
           });
-          this.loginSuccess.emit();
+          this.router.navigate(['/dashboard']);
         },
         error: (error) => {
           this.loading = false; // <<< Stop loader
@@ -80,10 +80,12 @@ export class Login {
   }
 
   onSignupClick() {
-    this.signupClicked.emit();
+    // Admin accounts are created by system administrators
+    alert('Admin accounts are created by system administrators. Please contact your administrator.');
   }
 
   onForgotPasswordClick() {
-    this.forgotPasswordClicked.emit();
+    // Admin password reset handled by system administrators
+    alert('Password reset for admin accounts is handled by system administrators. Please contact your administrator.');
   }
 }

@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ApiService } from '../../services/back-end-service';
 
 @Component({
@@ -33,7 +34,7 @@ export class Signup {
   otpTimer: number = 180;
   isOtpBlocked: boolean = true;
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService, private router: Router) {}
 
   togglePassword(field: string) {
     if (field === 'password') {
@@ -72,7 +73,7 @@ export class Signup {
       gender: this.gender
     };
   
-    this.apiService.post('signup', signupData).subscribe({
+    this.apiService.post('retailer/signup', signupData).subscribe({
       next: (response) => {
         localStorage.setItem('auth_token', response.auth_token);
         localStorage.setItem('email', response.email);
@@ -116,12 +117,12 @@ export class Signup {
       otp: this.otp
     };
 
-    this.apiService.post('verify', requestData).subscribe({
+    this.apiService.post('retailer/verify', requestData).subscribe({
       next: () => {
         localStorage.setItem('status', 'Verified'); // Set status to Verified
         this.isVerifyingOtp = false;
         this.showOtpPopup = false;
-        this.signupSuccess.emit();
+        this.router.navigate(['/dashboard']);
       },
       error: (err) => {
         this.isVerifyingOtp = false;
@@ -133,7 +134,7 @@ export class Signup {
   regenerateOtp() {
     if (this.isOtpBlocked) return;
 
-    this.apiService.post('otp-refresh', { email: localStorage.getItem('email') }).subscribe({
+    this.apiService.post('retailer/otp-refresh', { email: localStorage.getItem('email') }).subscribe({
       next: () => {
         alert('New OTP sent to your email.');
         this.startOtpTimer();
@@ -151,7 +152,10 @@ export class Signup {
     }
   }
 
-  onLoginClick() {
-    this.loginClicked.emit();
-  }
+ // inside signup.ts
+
+onLoginClick() {
+  console.log("Navigating back to Login...");
+  this.router.navigate(['/login']); // Change this from .emit() to .navigate()
+}
 }

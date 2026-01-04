@@ -1,157 +1,126 @@
-from flask import Blueprint # type: ignore # Blueprint for grouping all routes
-# Importing controllers for various functionalities
+from flask import Blueprint, request, jsonify
+from flask_cors import CORS
+
+# ===================== Controllers =====================
 from controllers.user.authController import signup, verify, login, logout
 from controllers.user.passwordController import (
     change_password, password_forget, verify_identity, set_new_password
 )
 from controllers.user.otpController import otpRefresh, validate_otp
 
-from controllers.retailer.retailerAuthController import retailerSignup, retailerVerify, retailerLogin, retailerLogout
-from controllers.retailer.retailerPasswordController import (
-    retailerChangePassword, retailerPasswordForget, retailerVerifyIdentity, retailerSetNewPassword
+from controllers.retailer.retailerAuthController import (
+    retailerSignup, retailerVerify, retailerLogin, retailerLogout
 )
-from controllers.retailer.retailerOtpController import retailerOtpRefresh, retailerValidateOtp
-from controllers.retailer.productController import add_product, view_products, edit_product, delete_product
-from controllers.retailer.orderController import view_orders, confirm_order, reject_order, dashboard
+from controllers.retailer.retailerPasswordController import (
+    retailerChangePassword, retailerPasswordForget,
+    retailerVerifyIdentity, retailerSetNewPassword
+)
+from controllers.retailer.retailerOtpController import (
+    retailerOtpRefresh, retailerValidateOtp
+)
+from controllers.retailer.productController import (
+    add_product, view_products, edit_product, delete_product
+)
+from controllers.retailer.orderController import (
+    view_orders, confirm_order, reject_order, dashboard
+)
+from controllers.retailer.advancedDashboardController import (
+    get_advanced_dashboard_stats, get_order_analytics, get_product_analytics
+)
+from controllers.retailer.imageUploadController import (
+    upload_product_image, delete_product_image, get_uploaded_images
+)
 
 from controllers.admin.adminAuthController import adminLogin, adminLogout
-from controllers.admin.productStatusController import view_pending_products, view_approved_products, view_rejected_products, edit_product_status
-from controllers.admin.ordersStatusController import view_all_orders, edit_order_status, admin_dashboard
-# Initialize Blueprint
+from controllers.admin.productStatusController import (
+    view_pending_products, view_approved_products,
+    view_rejected_products, edit_product_status
+)
+from controllers.admin.ordersStatusController import (
+    view_all_orders, edit_order_status, admin_dashboard
+)
+
+# ===================== Blueprint =====================
 routes = Blueprint("routes", __name__)
 
-# ===================== 🔐 Admin Authentication Routes =====================
+# 🔥 APPLY CORS TO BLUEPRINT (THIS WAS MISSING)
+CORS(
+    routes,
+    supports_credentials=True,
+    origins=[
+        "http://localhost:3002",
+        "http://127.0.0.1:3002",
+        "http://localhost:3001", 
+        "http://127.0.0.1:3001",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000"
+    ]
+)
 
-# Authenticates admin credentials and generates token
-routes.route("/admin/login", methods=["POST"])(adminLogin)
+# ===================== GLOBAL PREFLIGHT HANDLER =====================
+@routes.before_request
+def handle_options():
+    if request.method == "OPTIONS":
+        return "", 200
 
-# Invalidates admin token to log out
-routes.route("/admin/logout", methods=["POST"])(adminLogout)
+# ===================== 👤 USER ROUTES =====================
+routes.route("/signup", methods=["POST", "OPTIONS"])(signup)
+routes.route("/verify", methods=["POST", "OPTIONS"])(verify)
+routes.route("/login", methods=["POST", "OPTIONS"])(login)
+routes.route("/logout", methods=["POST", "OPTIONS"])(logout)
 
-# ===================== 🔐 Admin Product Management Routes =====================
+routes.route("/change-password", methods=["POST", "OPTIONS"])(change_password)
+routes.route("/password-forget", methods=["POST", "OPTIONS"])(password_forget)
+routes.route("/verify-identity", methods=["POST", "OPTIONS"])(verify_identity)
+routes.route("/set-new-password", methods=["POST", "OPTIONS"])(set_new_password)
 
-# View pending products
-routes.route("/admin/view-pending-products", methods=["POST"])(view_pending_products)
+routes.route("/otp-refresh", methods=["POST", "OPTIONS"])(otpRefresh)
+routes.route("/validate-otp", methods=["POST", "OPTIONS"])(validate_otp)
 
-# View approved products
-routes.route("/admin/view-approved-products", methods=["POST"])(view_approved_products)
+# ===================== 🔐 RETAILER ROUTES =====================
+routes.route("/retailer/signup", methods=["POST", "OPTIONS"])(retailerSignup)
+routes.route("/retailer/verify", methods=["POST", "OPTIONS"])(retailerVerify)
+routes.route("/retailer/login", methods=["POST", "OPTIONS"])(retailerLogin)
+routes.route("/retailer/logout", methods=["POST", "OPTIONS"])(retailerLogout)
 
-# View rejected products
-routes.route("/admin/view-rejected-products", methods=["POST"])(view_rejected_products)
+routes.route("/retailer/change-password", methods=["POST", "OPTIONS"])(retailerChangePassword)
+routes.route("/retailer/password-forget", methods=["POST", "OPTIONS"])(retailerPasswordForget)
+routes.route("/retailer/verify-identity", methods=["POST", "OPTIONS"])(retailerVerifyIdentity)
+routes.route("/retailer/set-new-password", methods=["POST", "OPTIONS"])(retailerSetNewPassword)
 
-# Edit product status
-routes.route("/admin/edit-product-status", methods=["POST"])(edit_product_status)
+routes.route("/retailer/otp-refresh", methods=["POST", "OPTIONS"])(retailerOtpRefresh)
+routes.route("/retailer/validate-otp", methods=["POST", "OPTIONS"])(retailerValidateOtp)
 
-# ===================== 🔐 Admin Order Management Routes =====================
+# ===================== 📦 RETAILER PRODUCTS & ORDERS =====================
+routes.route("/retailer/add-product", methods=["POST", "OPTIONS"])(add_product)
+routes.route("/retailer/view-products", methods=["POST", "OPTIONS"])(view_products)
+routes.route("/retailer/edit-product", methods=["POST", "OPTIONS"])(edit_product)
+routes.route("/retailer/delete-product", methods=["POST", "OPTIONS"])(delete_product)
 
-# View all orders
-routes.route("/admin/view-all-orders", methods=["POST"])(view_all_orders)
+routes.route("/retailer/view-orders", methods=["POST", "OPTIONS"])(view_orders)
+routes.route("/retailer/confirm-order", methods=["POST", "OPTIONS"])(confirm_order)
+routes.route("/retailer/reject-order", methods=["POST", "OPTIONS"])(reject_order)
+routes.route("/retailer/dashboard", methods=["POST", "OPTIONS"])(dashboard)
 
-# Edit order status
-routes.route("/admin/edit-order-status", methods=["POST"])(edit_order_status)
+# ===================== 🚀 ADVANCED DASHBOARD ROUTES =====================
+routes.route("/retailer/dashboard/advanced-stats", methods=["POST", "OPTIONS"])(get_advanced_dashboard_stats)
+routes.route("/retailer/orders/analytics", methods=["POST", "OPTIONS"])(get_order_analytics)
+routes.route("/retailer/products/analytics", methods=["POST", "OPTIONS"])(get_product_analytics)
 
-# Get admin dashboard stats
-routes.route("/admin/dashboard", methods=["POST"])(admin_dashboard)
+# ===================== 📸 IMAGE UPLOAD ROUTES =====================
+routes.route("/retailer/upload-image", methods=["POST", "OPTIONS"])(upload_product_image)
+routes.route("/retailer/delete-image", methods=["POST", "OPTIONS"])(delete_product_image)
+routes.route("/retailer/images", methods=["POST", "OPTIONS"])(get_uploaded_images)
 
-# ===================== 🔐 User Authentication Routes =====================
+# ===================== ️ ADMIN ROUTES =====================
+routes.route("/admin/login", methods=["POST", "OPTIONS"])(adminLogin)
+routes.route("/admin/logout", methods=["POST", "OPTIONS"])(adminLogout)
 
-# Handles user registration and stores user info
-routes.route("/signup", methods=["POST"])(signup)
+routes.route("/admin/view-pending-products", methods=["POST", "OPTIONS"])(view_pending_products)
+routes.route("/admin/view-approved-products", methods=["POST", "OPTIONS"])(view_approved_products)
+routes.route("/admin/view-rejected-products", methods=["POST", "OPTIONS"])(view_rejected_products)
+routes.route("/admin/edit-product-status", methods=["POST", "OPTIONS"])(edit_product_status)
 
-# Verifies OTP for newly signed-up users
-routes.route("/verify", methods=["POST"])(verify)
-
-# Authenticates user credentials and generates token
-routes.route("/login", methods=["POST"])(login)
-
-# Invalidates user token to log out
-routes.route("/logout", methods=["POST"])(logout)
-
-# ===================== 🔑 User Password Management Routes =====================
-
-# Change password for logged-in users
-routes.route("/change-password", methods=["POST"])(change_password)
-
-# Initiates "forgot password" flow (sends OTP)
-routes.route("/password-forget", methods=["POST"])(password_forget)
-
-# Validates identity via OTP before setting new password
-routes.route("/verify-identity", methods=["POST"])(verify_identity)
-
-# Sets new password after verification
-routes.route("/set-new-password", methods=["POST"])(set_new_password)
-
-# ===================== 🔁 OTP Handling Routes =====================
-
-# Refreshes and resends OTP
-routes.route("/otp-refresh", methods=["POST"])(otpRefresh)
-
-# Validates entered OTP against stored value
-routes.route("/validate-otp", methods=["POST"])(validate_otp)
-
-
-
-
-# ===================== 🔐 Retailer Authentication Routes =====================
-
-# Handles retailer registration and stores retailer info
-routes.route("/retailer/signup", methods=["POST"])(retailerSignup)
-
-# Verifies OTP for newly signed-up retailers
-routes.route("/retailer/verify", methods=["POST"])(retailerVerify)
-
-# Authenticates retailer credentials and generates token
-routes.route("/retailer/login", methods=["POST"])(retailerLogin)
-
-# Invalidates retailer token to log out
-routes.route("/retailer/logout", methods=["POST"])(retailerLogout)
-
-# ===================== 🔑 Retailer Password Management Routes =====================
-
-# Change password for logged-in retailers
-routes.route("/retailer/change-password", methods=["POST"])(retailerChangePassword)
-
-# Initiates "forgot password" flow (sends OTP)
-routes.route("/retailer/password-forget", methods=["POST"])(retailerPasswordForget)
-
-# Validates identity via OTP before setting new password
-routes.route("/retailer/verify-identity", methods=["POST"])(retailerVerifyIdentity)
-
-# Sets new password after verification
-routes.route("/retailer/set-new-password", methods=["POST"])(retailerSetNewPassword)
-
-# ===================== 🔁 OTP Handling Routes =====================
-
-# Refreshes and resends OTP
-routes.route("/retailer/otp-refresh", methods=["POST"])(retailerOtpRefresh)
-
-# Validates entered OTP against stored value
-routes.route("/retailer/validate-otp", methods=["POST"])(retailerValidateOtp)
-
-# ===================== 🔐 Retailer Product Management Routes =====================
-
-# Add a new product
-routes.route("/retailer/add-product", methods=["POST"])(add_product)
-
-# View existing products
-routes.route("/retailer/view-products", methods=["POST"])(view_products)
-
-# Edit a product
-routes.route("/retailer/edit-product", methods=["POST"])(edit_product)
-
-# Delete a product
-routes.route("/retailer/delete-product", methods=["POST"])(delete_product)
-
-# ===================== 🔐 Retailer Order Management Routes =====================
-
-# View coming orders
-routes.route("/retailer/view-orders", methods=["POST"])(view_orders)
-
-# Confirm an order
-routes.route("/retailer/confirm-order", methods=["POST"])(confirm_order)
-
-# Reject an order
-routes.route("/retailer/reject-order", methods=["POST"])(reject_order)
-
-# Get dashboard stats
-routes.route("/retailer/dashboard", methods=["POST"])(dashboard)
+routes.route("/admin/view-all-orders", methods=["POST", "OPTIONS"])(view_all_orders)
+routes.route("/admin/edit-order-status", methods=["POST", "OPTIONS"])(edit_order_status)
+routes.route("/admin/dashboard", methods=["POST", "OPTIONS"])(admin_dashboard)

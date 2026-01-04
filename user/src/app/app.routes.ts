@@ -2,11 +2,16 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { Login } from './components/login/login';
-
+import { Signup } from './components/signup/signup';
+import { ChangePassword } from './components/change-password/change-password';
+import { ForgotPassword } from './components/forgot-password/forgot-password';
 
 export const routes: Routes = [
   { path: '', component: Login },
   { path: 'login', component: Login },
+  { path: 'signup', component: Signup },
+  { path: 'forgot-password', component: ForgotPassword },
+  { path: 'change-password', component: ChangePassword },
   { path: '**', redirectTo: '' }
 ];
 

@@ -26,13 +26,23 @@ def retailerOtpRefresh():
 
         # Check if previous OTP exists
         try:
-            response = supabase.table("retailer").select("otp", "otp_purpose").eq("email", email).single().execute()
-            user_info = response.data  # Extract data correctly
+            response = supabase.table("retailer").select("otp", "otp_purpose").eq("email", email).execute()
+            if not response.data:
+                return jsonify({"error": "User not found"}), 404
+            user_info = response.data[0]  # Extract data correctly
         except Exception:
             return jsonify({"error": "Database error while retrieving OTP data"}), 500
 
         if not user_info or not user_info.get("otp") or not user_info.get("otp_purpose"):
-            return jsonify({"error": "No previous OTP requests found to refresh"}), 400
+            # Check if user exists at all
+            try:
+                user_exists = supabase.table("retailer").select("id").eq("email", email).execute()
+                if not user_exists.data:
+                    return jsonify({"error": "User not found"}), 404
+                else:
+                    return jsonify({"error": "No previous OTP requests found to refresh"}), 400
+            except Exception:
+                return jsonify({"error": "Database error while checking user existence"}), 500
 
         # Regenerate OTP
         new_otp = regenerate_otp(email)
@@ -44,11 +54,19 @@ def retailerOtpRefresh():
 
         # Update database
         try:
-            response = supabase.table("retailer").update({"otp": hashed_otp, "otp_expiry": otp_expiry}).eq("email", email).execute()
+            response = supabase.table("retailer").update({
+                "otp": hashed_otp, 
+                "otp_expiry": otp_expiry,
+                "otp_purpose": user_info.get("otp_purpose", "Verification")
+            }).eq("email", email).execute()
         except Exception:
             return jsonify({"error": "Database error while updating OTP"}), 500
 
-        return jsonify({"message": "OTP regenerated successfully"}), 200
+        return jsonify({
+            "message": "OTP regenerated successfully",
+            "email": email,
+            "status": "success"
+        }), 200
 
     except Exception as e:
         print(f"Error in otpRefresh: {str(e)}")

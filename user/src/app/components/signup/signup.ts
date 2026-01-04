@@ -1,6 +1,7 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ApiService } from '../../services/back-end-service';
 
 @Component({
@@ -10,37 +11,43 @@ import { ApiService } from '../../services/back-end-service';
   templateUrl: './signup.html',
   styleUrl: './signup.css'
 })
-export class Signup {
+export class Signup implements OnDestroy {
   @Output() signupSuccess = new EventEmitter<void>();
   @Output() loginClicked = new EventEmitter<void>();
 
-  fullName: string = '';
-  email: string = '';
-  gender: string = 'male';
-  password: string = '';
-  confirmPassword: string = '';
-  errorMessage: string = '';
-  isLoading: boolean = false;
+  fullName = '';
+  email = '';
+  gender: 'male' | 'female' | 'other' = 'male';
+  password = '';
+  confirmPassword = '';
+  errorMessage = '';
+  isLoading = false;
 
-  showPassword: boolean = false;
-  showConfirmPassword: boolean = false;
+  showPassword = false;
+  showConfirmPassword = false;
 
-  // OTP Variables
-  showOtpPopup: boolean = false;
-  otp: string = '';
-  otpErrorMessage: string = '';
-  isVerifyingOtp: boolean = false;
-  otpTimer: number = 180;
-  isOtpBlocked: boolean = true;
+  // OTP
+  showOtpPopup = false;
+  otp = '';
+  otpErrorMessage = '';
+  isVerifyingOtp = false;
+  otpTimer = 180;
+  isOtpBlocked = true;
+  private otpInterval: any = null;
 
-  constructor(private apiService: ApiService) {}
+  constructor(
+    private apiService: ApiService,
+    private router: Router
+  ) {}
 
-  togglePassword(field: string) {
-    if (field === 'password') {
-      this.showPassword = !this.showPassword;
-    } else if (field === 'confirmPassword') {
-      this.showConfirmPassword = !this.showConfirmPassword;
-    }
+  ngOnDestroy() {
+    if (this.otpInterval) clearInterval(this.otpInterval);
+  }
+
+  togglePassword(field: 'password' | 'confirmPassword') {
+    field === 'password'
+      ? (this.showPassword = !this.showPassword)
+      : (this.showConfirmPassword = !this.showConfirmPassword);
   }
 
   get passwordsMatch(): boolean {
@@ -48,84 +55,99 @@ export class Signup {
   }
 
   validateForm(): boolean {
-    if (!this.fullName.trim() || !this.email.trim() || !this.password.trim() || !this.confirmPassword.trim()) {
+    if (!this.fullName || !this.email || !this.password || !this.confirmPassword) {
       this.errorMessage = 'All fields are required';
       return false;
     }
+
     if (!this.passwordsMatch) {
       this.errorMessage = 'Passwords do not match';
       return false;
     }
+
+    if (this.password.length < 8) {
+      this.errorMessage = 'Password must be at least 8 characters';
+      return false;
+    }
+
     return true;
   }
 
   onSignup() {
     this.errorMessage = '';
     if (!this.validateForm()) return;
-  
+
     this.isLoading = true;
-  
-    const signupData = {
-      full_name: this.fullName,
-      email: this.email.toLowerCase().trim(),
+
+    const payload = {
+      full_name: this.fullName.trim(),
+      email: this.email.trim().toLowerCase(),
       password: this.password,
       gender: this.gender
     };
-  
-    this.apiService.post('signup', signupData).subscribe({
-      next: (response) => {
-        localStorage.setItem('auth_token', response.auth_token);
-        localStorage.setItem('email', response.email);
-        localStorage.setItem('full_name', response.full_name);
-        localStorage.setItem('profile_pic', response.profile_pic);
-        localStorage.setItem('status', response.status);
-  
+
+    this.apiService.post('signup', payload).subscribe({
+      next: (res: any) => {
+        // Save session data
+        localStorage.setItem('auth_token', res.auth_token);
+        localStorage.setItem('email', res.email);
+        localStorage.setItem('full_name', res.full_name);
+        localStorage.setItem('profile_pic', res.profile_pic || '');
+        localStorage.setItem('status', res.status);
+
         this.isLoading = false;
-  
-        // Show OTP popup
         this.showOtpPopup = true;
         this.startOtpTimer();
       },
       error: (err) => {
         this.isLoading = false;
-        this.errorMessage = err.error?.error || 'Unexpected error occurred';
+        this.errorMessage = err?.error?.error || 'Signup failed';
       }
     });
   }
-  
 
   startOtpTimer() {
     this.isOtpBlocked = true;
     this.otpTimer = 180;
-    const interval = setInterval(() => {
+
+    if (this.otpInterval) clearInterval(this.otpInterval);
+
+    this.otpInterval = setInterval(() => {
       this.otpTimer--;
-      if (this.otpTimer === 0) {
+
+      if (this.otpTimer <= 0) {
         this.isOtpBlocked = false;
-        clearInterval(interval);
+        clearInterval(this.otpInterval);
       }
     }, 1000);
   }
 
   verifyOtp() {
-    this.otpErrorMessage = '';
-    this.isVerifyingOtp = true;
+    if (!this.otp || this.otp.length !== 6) {
+      this.otpErrorMessage = 'Enter a valid 6-digit OTP';
+      return;
+    }
 
-    const requestData = {
+    this.isVerifyingOtp = true;
+    this.otpErrorMessage = '';
+
+    const payload = {
       email: localStorage.getItem('email'),
       auth_token: localStorage.getItem('auth_token'),
       otp: this.otp
     };
 
-    this.apiService.post('verify', requestData).subscribe({
+    this.apiService.post('verify', payload).subscribe({
       next: () => {
-        localStorage.setItem('status', 'Verified'); // Set status to Verified
+        localStorage.setItem('status', 'Verified');
         this.isVerifyingOtp = false;
         this.showOtpPopup = false;
         this.signupSuccess.emit();
+        this.router.navigate(['/dashboard']);
       },
       error: (err) => {
         this.isVerifyingOtp = false;
-        this.otpErrorMessage = err.error?.error || 'Invalid OTP';
+        this.otpErrorMessage = err?.error?.error || 'Invalid OTP';
       }
     });
   }
@@ -133,20 +155,21 @@ export class Signup {
   regenerateOtp() {
     if (this.isOtpBlocked) return;
 
-    this.apiService.post('otp-refresh', { email: localStorage.getItem('email') }).subscribe({
+    this.apiService.post('otp-refresh', {
+      email: localStorage.getItem('email')
+    }).subscribe({
       next: () => {
-        alert('New OTP sent to your email.');
+        alert('New OTP sent to your email');
         this.startOtpTimer();
       },
       error: () => {
-        alert('Failed to regenerate OTP.');
+        alert('Failed to resend OTP');
       }
     });
   }
 
   validateOtpInput(event: KeyboardEvent) {
-    const charCode = event.key.charCodeAt(0);
-    if (charCode < 48 || charCode > 57) {
+    if (!/[0-9]/.test(event.key) && event.key !== 'Backspace') {
       event.preventDefault();
     }
   }

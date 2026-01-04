@@ -1,12 +1,13 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router'; // Added RouterModule
 import { ApiService } from '../../services/back-end-service';
 
 @Component({
   standalone: true,
   selector: 'app-login',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
@@ -16,13 +17,10 @@ export class Login {
   errorMessage: string = '';
   loading: boolean = false;
 
-  @Output() signupClicked = new EventEmitter<void>();
-  @Output() forgotPasswordClicked = new EventEmitter<void>();
-  @Output() loginSuccess = new EventEmitter<void>();
-
   constructor(
     private fb: FormBuilder,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private router: Router
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -42,30 +40,31 @@ export class Login {
     this.errorMessage = '';
     
     if (this.loginForm.valid) {
-      this.loading = true; // <<< Start loader
+      this.loading = true;
       const loginData = {
         email: this.loginForm.value.email.toLowerCase().trim(),
         password: this.loginForm.value.password
       };
   
-      this.apiService.post('login', loginData).subscribe({
+      // Updated to 'retailer/login' to match retailer routes in routes.py
+      this.apiService.post('retailer/login', loginData).subscribe({
         next: (response) => {
-          this.loading = false; // <<< Stop loader
+          this.loading = false;
           Object.entries(response).forEach(([key, value]) => {
             localStorage.setItem(key, String(value));
           });
-          this.loginSuccess.emit();
+          this.router.navigate(['/dashboard']);
         },
         error: (error) => {
-          this.loading = false; // <<< Stop loader
+          this.loading = false;
           console.error('Login error:', error);
           this.handleLoginError(error);
         }
       });
+    } else {
+      this.errorMessage = 'Please fill out the form correctly.';
     }
   }
-  
-  
 
   private handleLoginError(error: any) {
     if (error.status === 404) {
@@ -79,11 +78,14 @@ export class Login {
     }
   }
 
+  // FIXED: Now uses Router instead of EventEmitter
   onSignupClick() {
-    this.signupClicked.emit();
+    console.log("Navigating to signup...");
+    this.router.navigate(['/signup']);
   }
 
   onForgotPasswordClick() {
-    this.forgotPasswordClicked.emit();
+    console.log("Navigating to forgot-password...");
+    this.router.navigate(['/forgot-password']);
   }
 }

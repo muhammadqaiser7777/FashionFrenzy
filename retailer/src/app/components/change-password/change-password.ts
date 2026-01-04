@@ -62,7 +62,7 @@ export class ChangePassword {
       new_password: this.newPassword
     };
 
-    this.apiService.post('change-password', payload).subscribe({
+    this.apiService.post('retailer/change-password', payload).subscribe({
       next: (response) => {
         console.log('Password changed successfully', response);
         this.successMessage = 'Password changed successfully';

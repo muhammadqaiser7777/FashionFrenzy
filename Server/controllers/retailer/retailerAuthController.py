@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import request, jsonify # type: ignore
 from config.supabaseConfig import supabase
 from config.mailConfig import generate_otp
@@ -87,6 +87,7 @@ def retailerSignup():
         hashed_password = hash_password(password)
         hashed_otp = hash_otp(otp)
         auth_token = generate_auth_token(email)
+        otp_expiry = (datetime.utcnow() + timedelta(minutes=3)).isoformat()
 
         try:
             response = supabase.table("retailer").insert({
@@ -98,6 +99,7 @@ def retailerSignup():
                 "status": status,
                 "otp": hashed_otp,
                 "otp_purpose": otp_purpose,
+                "otp_expiry": otp_expiry,
                 "auth_token": auth_token
             }).execute()
         except Exception:
@@ -105,12 +107,11 @@ def retailerSignup():
 
         print("User registered successfully!")
         return jsonify({
-            "message": "User registered successfully",
             "auth_token": auth_token,
             "email": email,
-            "status": status,
+            "full_name": full_name,
             "profile_pic": profile_pic_response,
-            "full_name": full_name
+            "status": status
         }), 201
 
     except Exception as e:
@@ -180,7 +181,11 @@ def retailerVerify():
         except Exception:
             return jsonify({"error": "Database error while updating user status"}), 500
 
-        return jsonify({"message": "OTP verified successfully, status updated to Verified"}), 200
+        return jsonify({
+            "message": "OTP verified successfully",
+            "status": "Verified",
+            "email": email
+        }), 200
 
     except Exception as e:
         print(f"Unexpected verification error: {str(e)}")

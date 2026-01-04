@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ApiService } from '../../services/back-end-service';
 
 @Component({
@@ -22,7 +23,8 @@ export class Login {
 
   constructor(
     private fb: FormBuilder,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private router: Router
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -54,7 +56,7 @@ export class Login {
           Object.entries(response).forEach(([key, value]) => {
             localStorage.setItem(key, String(value));
           });
-          this.loginSuccess.emit();
+          this.router.navigate(['/dashboard']);
         },
         error: (error) => {
           this.loading = false; // <<< Stop loader
@@ -84,6 +86,6 @@ export class Login {
   }
 
   onForgotPasswordClick() {
-    this.forgotPasswordClicked.emit();
+    this.router.navigate(['/forgot-password']);
   }
 }

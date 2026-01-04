@@ -1,1 +1,267 @@
-<p>dashboard works!</p>
+<!-- Header -->
+<header class="dashboard-header">
+  <div class="header-content">
+    <div class="logo-section">
+      <img src="assets/images/main-logo.webp" alt="Fashion Frenzy" class="logo">
+      <h1>Retailer Dashboard</h1>
+    </div>
+    <div class="user-section">
+      <span class="user-name">{{ getUserName() }}</span>
+      <button class="logout-btn" (click)="logout()">Logout</button>
+    </div>
+  </div>
+</header>
+
+<!-- Navigation Tabs -->
+<nav class="dashboard-nav">
+  <div class="nav-container">
+    <button 
+      class="nav-tab" 
+      [class.active]="activeTab === 'overview'"
+      (click)="setActiveTab('overview')">
+      <i class="icon">📊</i>
+      Overview
+    </button>
+    <button 
+      class="nav-tab" 
+      [class.active]="activeTab === 'products'"
+      (click)="setActiveTab('products')">
+      <i class="icon">📦</i>
+      Products
+    </button>
+    <button 
+      class="nav-tab" 
+      [class.active]="activeTab === 'orders'"
+      (click)="setActiveTab('orders')">
+      <i class="icon">📋</i>
+      Orders
+    </button>
+    <button 
+      class="nav-tab" 
+      [class.active]="activeTab === 'analytics'"
+      (click)="setActiveTab('analytics')">
+      <i class="icon">📈</i>
+      Analytics
+    </button>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<main class="dashboard-main">
+  <div class="container" *ngIf="!isLoading; else loadingTemplate">
+    
+    <!-- Overview Tab -->
+    <div *ngIf="activeTab === 'overview'" class="tab-content">
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon orders">📋</div>
+          <div class="stat-content">
+            <h3>{{ stats.total_orders }}</h3>
+            <p>Total Orders</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon revenue">💰</div>
+          <div class="stat-content">
+            <h3>{{ formatCurrency(stats.total_revenue) }}</h3>
+            <p>Total Revenue</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon products">📦</div>
+          <div class="stat-content">
+            <h3>{{ stats.total_products }}</h3>
+            <p>Products</p>
+          </div>
+        </div>
+        
+        <div class="stat-card" [class.warning]="stats.low_stock_products > 0">
+          <div class="stat-icon stock">⚠️</div>
+          <div class="stat-content">
+            <h3>{{ stats.low_stock_products }}</h3>
+            <p>Low Stock</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions">
+        <h2>Quick Actions</h2>
+        <div class="action-buttons">
+          <button class="action-btn primary" (click)="navigateToProducts()">
+            <i class="icon">➕</i>
+            Add Product
+          </button>
+          <button class="action-btn secondary" (click)="navigateToOrders()">
+            <i class="icon">👁️</i>
+            View Orders
+          </button>
+          <button class="action-btn" (click)="refreshStats()">
+            <i class="icon">🔄</i>
+            Refresh Data
+          </button>
+        </div>
+      </div>
+
+      <!-- Recent Orders -->
+      <div class="recent-orders">
+        <h2>Recent Orders</h2>
+        <div class="orders-list">
+          <div class="order-item" *ngFor="let order of stats.recent_orders.slice(0, 5)">
+            <div class="order-info">
+              <span class="order-id">#{{ order.id }}</span>
+              <span class="customer-email">{{ order.user_email }}</span>
+              <span class="order-date">{{ formatDate(order.created_at) }}</span>
+            </div>
+            <div class="order-details">
+              <span class="order-amount">{{ formatCurrency(order.total_amount) }}</span>
+              <span class="order-status" [style.background-color]="getStatusColor(order.delivery_status)">
+                {{ order.delivery_status }}
+              </span>
+              <span class="items-count">{{ order.items_count }} items</span>
+            </div>
+          </div>
+          
+          <div *ngIf="stats.recent_orders.length === 0" class="no-data">
+            <p>No recent orders found</p>
+          </div>
+        </div>
+        
+        <button class="view-all-btn" (click)="navigateToOrders()">View All Orders</button>
+      </div>
+
+      <!-- Top Selling Products -->
+      <div class="top-products">
+        <h2>Top Selling Products</h2>
+        <div class="products-grid">
+          <div class="product-card" *ngFor="let product of stats.top_selling_products">
+            <div class="product-image">
+              <div class="placeholder-image">📷</div>
+            </div>
+            <div class="product-info">
+              <h4>{{ product.title }}</h4>
+              <p class="category">{{ product.category }}</p>
+              <div class="product-stats">
+                <span class="sold">{{ product.quantity_sold }} sold</span>
+                <span class="revenue">{{ formatCurrency(product.revenue) }}</span>
+                <span class="stock" [class.low-stock]="product.stock < 10">
+                  Stock: {{ product.stock }}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div *ngIf="stats.top_selling_products.length === 0" class="no-data">
+            <p>No sales data available</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Products Tab -->
+    <div *ngIf="activeTab === 'products'" class="tab-content">
+      <div class="section-header">
+        <h2>Product Management</h2>
+        <button class="btn-primary" (click)="navigateToProducts()">
+          <i class="icon">➕</i>
+          Add New Product
+        </button>
+      </div>
+      
+      <div class="coming-soon">
+        <div class="coming-soon-content">
+          <h3>🚀 Advanced Product Management</h3>
+          <p>Complete product management interface is being built...</p>
+          <ul>
+            <li>✅ Product listing and search</li>
+            <li>✅ Add/Edit products with image upload</li>
+            <li>✅ Inventory management</li>
+            <li>✅ Category management</li>
+            <li>🔄 Stock alerts and low inventory warnings</li>
+          </ul>
+          <button class="btn-secondary" (click)="navigateToProducts()">
+            View Basic Products Page
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Orders Tab -->
+    <div *ngIf="activeTab === 'orders'" class="tab-content">
+      <div class="section-header">
+        <h2>Order Management</h2>
+        <button class="btn-secondary" (click)="navigateToOrders()">
+          <i class="icon">👁️</i>
+          View All Orders
+        </button>
+      </div>
+      
+      <div class="coming-soon">
+        <div class="coming-soon-content">
+          <h3>📋 Advanced Order Management</h3>
+          <p>Complete order management interface is being built...</p>
+          <ul>
+            <li>✅ View and filter orders by status</li>
+            <li>✅ Accept/Reject orders with reasons</li>
+            <li>✅ Order tracking and updates</li>
+            <li>✅ Customer communication</li>
+            <li>🔄 Bulk order operations</li>
+            <li>🔄 Order analytics and reporting</li>
+          </ul>
+          <button class="btn-secondary" (click)="navigateToOrders()">
+            View Basic Orders Page
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analytics Tab -->
+    <div *ngIf="activeTab === 'analytics'" class="tab-content">
+      <div class="section-header">
+        <h2>Analytics & Reports</h2>
+      </div>
+      
+      <div class="coming-soon">
+        <div class="coming-soon-content">
+          <h3>📊 Advanced Analytics Dashboard</h3>
+          <p>Comprehensive analytics and reporting features are being built...</p>
+          <ul>
+            <li>📈 Revenue charts and trends</li>
+            <li>📊 Sales performance metrics</li>
+            <li>🎯 Product performance analysis</li>
+            <li>📅 Monthly/Quarterly reports</li>
+            <li>🔍 Customer behavior insights</li>
+            <li>💡 Inventory optimization suggestions</li>
+          </ul>
+          
+          <!-- Revenue Chart Placeholder -->
+          <div class="chart-placeholder">
+            <h4>Monthly Revenue Trend</h4>
+            <div class="chart-container">
+              <div class="chart-bars">
+                <div 
+                  *ngFor="let month of stats.monthly_revenue" 
+                  class="chart-bar"
+                  [style.height.%]="getChartHeightPercentage(month)">
+                  <span class="bar-label">{{ month.month.split('-')[1] }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Loading Template -->
+  <ng-template #loadingTemplate>
+    <div class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Loading dashboard...</p>
+    </div>
+  </ng-template>
+</main>

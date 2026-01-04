@@ -75,7 +75,7 @@ def verify_retailer_token(auth_token):
         # Optionally, check if token exists in DB, but since it's non-expiring, maybe not necessary
         # But per user request, check in table
         from config.supabaseConfig import supabase
-        user_response = supabase.table("retailers").select("email").eq("auth_token", auth_token).execute()
+        user_response = supabase.table("retailer").select("email").eq("auth_token", auth_token).execute()
         if user_response.data:
             return user_response.data[0]["email"]
         return None
