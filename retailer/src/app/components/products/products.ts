@@ -59,12 +59,12 @@ export class Products implements OnInit {
   
   // Categories
   categories = [
-    'Men\'s Clothing',
-    'Women\'s Clothing',
-    'Men\'s Wallets',
-    'Women\'s Purses',
-    'Men\'s Shoes',
-    'Women\'s Shoes'
+    'Men Clothing',
+    'Women Clothing',
+    'Men Wallet',
+    'Women Purse',
+    'Men Shoes',
+    'Women Shoes'
   ];
 
   constructor(

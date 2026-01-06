@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiService } from '../../services/back-end-service';
 
@@ -14,6 +15,7 @@ interface Product {
   images: Array<{image_url: string, is_primary: boolean}>;
   retailer_name?: string;
   status?: string;
+  admin_comment?: string;
   actionLoading?: boolean;
 }
 
@@ -27,13 +29,30 @@ interface AdminStats {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css'
 })
 export class Dashboard implements OnInit {
   isLoading = true;
+  activeTab = 'overview';
+  
   pendingProducts: Product[] = [];
+  approvedProducts: Product[] = [];
+  rejectedProducts: Product[] = [];
+  filteredProducts: Product[] = [];
+  
+  selectedCategory = '';
+  
+  // Categories for filtering
+  categories = [
+    "Men Clothing",
+    "Women Clothing",
+    "Men Wallet",
+    "Women Purse",
+    "Men Shoes",
+    "Women Shoes"
+  ];
   
   stats: AdminStats = {
     pending_products: 0,
@@ -73,20 +92,46 @@ export class Dashboard implements OnInit {
     }
   }
 
+  setActiveTab(tab: string) {
+    this.activeTab = tab;
+    this.loadTabData(tab);
+  }
+
   loadDashboardData() {
-    this.loadPendingProducts();
     this.loadStats();
+    this.loadPendingProducts();
+  }
+
+  loadTabData(tab: string) {
+    switch (tab) {
+      case 'pending':
+        if (this.pendingProducts.length === 0) {
+          this.loadPendingProducts();
+        } else {
+          this.filterProducts();
+        }
+        break;
+      case 'approved':
+        if (this.approvedProducts.length === 0) {
+          this.loadApprovedProducts();
+        }
+        break;
+      case 'rejected':
+        if (this.rejectedProducts.length === 0) {
+          this.loadRejectedProducts();
+        }
+        break;
+      case 'overview':
+        this.loadStats();
+        break;
+    }
   }
 
   loadStats() {
-    // Get real stats from API or calculate from current data
     this.stats.pending_products = this.pendingProducts.length;
-    
-    // For now, set mock stats for approved/rejected/total retailers
-    // In real implementation, these would come from separate API calls
-    this.stats.approved_products = 0; // Will be updated from API
-    this.stats.rejected_products = 0; // Will be updated from API  
-    this.stats.total_retailers = 0;   // Will be updated from API
+    this.stats.approved_products = this.approvedProducts.length;
+    this.stats.rejected_products = this.rejectedProducts.length;
+    this.stats.total_retailers = 0; // Will be updated from API
   }
 
   async loadPendingProducts() {
@@ -98,38 +143,138 @@ export class Dashboard implements OnInit {
         throw new Error('No auth token found');
       }
 
-      // Try to load products from retailers for approval
       const response = await this.apiService.post('admin/view-pending-products', {
         auth_token: authToken
       }).toPromise();
       
-      this.pendingProducts = response?.products || [];
-      this.loadStats();
+      console.log('Pending products response:', response);
+      
+      const products = response?.products || [];
+      this.pendingProducts = products.map((p: any) => ({
+        id: p.id,
+        category: p.category,
+        title: p.title,
+        description: p.description,
+        price: p.price,
+        discounted_price: p.discounted_price,
+        stock: p.stock,
+        images: p.images || [],
+        retailer_name: p.retailer?.full_name || p.retailer_name || 'Unknown',
+        status: p.status
+      }));
+      
+      this.filterProducts();
+      this.stats.pending_products = this.pendingProducts.length;
     } catch (error: any) {
       console.error('Failed to load pending products:', error);
       
       if (error.status === 404) {
-        // API endpoint not implemented yet
         this.pendingProducts = [];
-        this.showInfoMessage('Product approval system will be available once backend endpoints are implemented.');
+        this.showInfoMessage('Product approval feature will be available once backend endpoints are implemented.');
       } else if (error.status === 0) {
-        alert('Cannot connect to server. Please check if the backend is running.');
+        this.showInfoMessage('Cannot connect to server. Please check if the backend is running.');
       } else if (error.status === 401) {
         alert('Session expired. Please login again.');
         this.router.navigate(['/login']);
+      } else if (error.status === 500) {
+        console.error('Server error details:', error.error);
+        this.showInfoMessage('Server error loading products. Please check backend logs.');
       } else {
-        alert('Failed to load pending products. Please try again.');
+        this.showInfoMessage(`Failed to load pending products: ${error.message || 'Please try again.'}`);
       }
       
-      // Set empty array on error
       this.pendingProducts = [];
     } finally {
       this.isLoading = false;
     }
   }
 
+  async loadApprovedProducts() {
+    this.isLoading = true;
+    
+    try {
+      const authToken = localStorage.getItem('auth_token');
+      if (!authToken) {
+        throw new Error('No auth token found');
+      }
+
+      const response = await this.apiService.post('admin/view-approved-products', {
+        auth_token: authToken
+      }).toPromise();
+      
+      console.log('Approved products response:', response);
+      
+      const products = response?.products || [];
+      this.approvedProducts = products.map((p: any) => ({
+        id: p.id,
+        category: p.category,
+        title: p.title,
+        description: p.description,
+        price: p.price,
+        discounted_price: p.discounted_price,
+        stock: p.stock,
+        images: p.images || [],
+        retailer_name: p.retailer?.full_name || p.retailer_name || 'Unknown',
+        status: p.status
+      }));
+      
+      this.stats.approved_products = this.approvedProducts.length;
+    } catch (error: any) {
+      console.error('Failed to load approved products:', error);
+      this.approvedProducts = [];
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  async loadRejectedProducts() {
+    this.isLoading = true;
+    
+    try {
+      const authToken = localStorage.getItem('auth_token');
+      if (!authToken) {
+        throw new Error('No auth token found');
+      }
+
+      const response = await this.apiService.post('admin/view-rejected-products', {
+        auth_token: authToken
+      }).toPromise();
+      
+      console.log('Rejected products response:', response);
+      
+      const products = response?.products || [];
+      this.rejectedProducts = products.map((p: any) => ({
+        id: p.id,
+        category: p.category,
+        title: p.title,
+        description: p.description,
+        price: p.price,
+        discounted_price: p.discounted_price,
+        stock: p.stock,
+        images: p.images || [],
+        retailer_name: p.retailer?.full_name || p.retailer_name || 'Unknown',
+        status: p.status,
+        admin_comment: p.admin_comment
+      }));
+      
+      this.stats.rejected_products = this.rejectedProducts.length;
+    } catch (error: any) {
+      console.error('Failed to load rejected products:', error);
+      this.rejectedProducts = [];
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  filterProducts() {
+    if (this.selectedCategory) {
+      this.filteredProducts = this.pendingProducts.filter(p => p.category === this.selectedCategory);
+    } else {
+      this.filteredProducts = this.pendingProducts;
+    }
+  }
+
   private showInfoMessage(message: string) {
-    // Create and show a temporary info message
     const infoDiv = document.createElement('div');
     infoDiv.style.cssText = `
       position: fixed;
@@ -148,7 +293,6 @@ export class Dashboard implements OnInit {
     
     document.body.appendChild(infoDiv);
     
-    // Remove after 5 seconds
     setTimeout(() => {
       if (document.body.contains(infoDiv)) {
         document.body.removeChild(infoDiv);
@@ -167,7 +311,6 @@ export class Dashboard implements OnInit {
         throw new Error('Missing auth token or product ID');
       }
 
-      // Call API to approve product
       const response = await this.apiService.post('admin/edit-product-status', {
         auth_token: authToken,
         product_id: product.id,
@@ -175,11 +318,13 @@ export class Dashboard implements OnInit {
         admin_comment: ''
       }).toPromise();
       
+      console.log('Approve response:', response);
+      
       if (response?.success) {
-        // Remove from pending products
+        // Remove from pending and add to approved
         this.pendingProducts = this.pendingProducts.filter(p => p.id !== product.id);
-        
-        // Update stats
+        this.approvedProducts.push({ ...product, status: 'approved' });
+        this.filterProducts();
         this.stats.pending_products--;
         this.stats.approved_products++;
         
@@ -218,7 +363,6 @@ export class Dashboard implements OnInit {
         throw new Error('Missing auth token or product ID');
       }
 
-      // Call API to reject product
       const response = await this.apiService.post('admin/edit-product-status', {
         auth_token: authToken,
         product_id: product.id,
@@ -226,11 +370,13 @@ export class Dashboard implements OnInit {
         admin_comment: reason || ''
       }).toPromise();
       
+      console.log('Reject response:', response);
+      
       if (response?.success) {
-        // Remove from pending products
+        // Remove from pending and add to rejected
         this.pendingProducts = this.pendingProducts.filter(p => p.id !== product.id);
-        
-        // Update stats
+        this.rejectedProducts.push({ ...product, status: 'rejected', admin_comment: reason || '' });
+        this.filterProducts();
         this.stats.pending_products--;
         this.stats.rejected_products++;
         
@@ -270,14 +416,12 @@ export class Dashboard implements OnInit {
       return '';
     }
     
-    // Try to find primary image first
     const primaryImage = product.images.find(img => img.is_primary);
     if (primaryImage && primaryImage.image_url) {
       const imageUrl = primaryImage.image_url;
       return imageUrl.startsWith('http') ? imageUrl : `http://localhost:5000${imageUrl}`;
     }
     
-    // Fallback to first image
     const firstImage = product.images[0];
     if (firstImage && firstImage.image_url) {
       const imageUrl = firstImage.image_url;
