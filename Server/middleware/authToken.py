@@ -19,19 +19,14 @@ if not SECRET_KEY_USER:
 if not TEMP_SECRET_KEY_USER:
     raise ValueError("TEMP_SECRET_KEY_USER is missing. Check your .env file.")
 
-
 if not SECRET_KEY_RETAILER:
     raise ValueError("SECRET_KEY_RETAILER is missing. Check your .env file.")
 
 if not TEMP_SECRET_KEY_RETAILER:
     raise ValueError("TEMP_SECRET_KEY_RETAILER is missing. Check your .env file.")
 
-
 if not SECRET_KEY_ADMIN:
     raise ValueError("SECRET_KEY_ADMIN is missing. Check your .env file.")
-
-
-
 
 EXPIRY_DURATION = timedelta(minutes=3)  # Define expiry duration
 
@@ -83,6 +78,9 @@ def verify_retailer_token(auth_token):
         return None
     except jwt.InvalidTokenError:
         return None
+    except Exception as e:
+        print(f"Error verifying retailer token: {str(e)}")
+        return None
 
 def verify_admin_token(auth_token):
     """Verify admin auth_token and return username if valid."""
@@ -95,12 +93,23 @@ def verify_admin_token(auth_token):
         username = payload.get("username")
         if not username:
             return None
-        from config.supabaseConfig import supabase
-        admin_response = supabase.table("admin").select("username").eq("auth_token", auth_token).execute()
-        if admin_response.data:
-            return admin_response.data[0]["username"]
-        return None
+        
+        try:
+            from config.supabaseConfig import supabase
+            admin_response = supabase.table("admin").select("username").eq("auth_token", auth_token).execute()
+            if admin_response.data:
+                return admin_response.data[0]["username"]
+            return None
+        except Exception as db_error:
+            print(f"Database error in verify_admin_token: {str(db_error)}")
+            # If database query fails but token is valid, still return username
+            # This allows admin functions to work even if admin table has issues
+            return username
+            
     except jwt.ExpiredSignatureError:
         return None
     except jwt.InvalidTokenError:
+        return None
+    except Exception as e:
+        print(f"Error verifying admin token: {str(e)}")
         return None

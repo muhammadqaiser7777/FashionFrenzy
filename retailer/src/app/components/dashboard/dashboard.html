@@ -1,287 +1,520 @@
-<!-- Header -->
-<header class="dashboard-header">
-  <div class="header-content">
-    <div class="logo-section">
-      <img src="assets/images/main-logo.webp" alt="Fashion Frenzy" class="logo">
-      <h1>Retailer Dashboard</h1>
+<!-- Dashboard Layout Wrapper -->
+<div class="dashboard-layout">
+  
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar" [class.collapsed]="sidebarCollapsed" [class.mobile-open]="mobileMenuOpen">
+    <div class="sidebar-header">
+      <div class="logo-container">
+        <img src="assets/images/main-logo.webp" alt="Fashion Frenzy" class="sidebar-logo">
+        <span class="logo-text" *ngIf="!sidebarCollapsed">Fashion Frenzy</span>
+      </div>
+      <button class="collapse-btn" (click)="toggleSidebar()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path *ngIf="!sidebarCollapsed" d="M15 18l-6-6 6-6"/>
+          <path *ngIf="sidebarCollapsed" d="M9 18l6-6-6-6"/>
+        </svg>
+      </button>
     </div>
-    <div class="user-section">
-      <span class="user-name">{{ getUserName() }}</span>
-      <button class="logout-btn" (click)="logout()">Logout</button>
-    </div>
-  </div>
-</header>
-
-<!-- Navigation Tabs -->
-<nav class="dashboard-nav">
-  <div class="nav-container">
-    <button 
-      class="nav-tab" 
-      [class.active]="activeTab === 'overview'"
-      (click)="setActiveTab('overview')">
-      <i class="icon">📊</i>
-      Overview
-    </button>
-    <button 
-      class="nav-tab" 
-      [class.active]="activeTab === 'products'"
-      (click)="setActiveTab('products')">
-      <i class="icon">📦</i>
-      Products
-    </button>
-    <button 
-      class="nav-tab" 
-      [class.active]="activeTab === 'orders'"
-      (click)="setActiveTab('orders')">
-      <i class="icon">📋</i>
-      Orders
-    </button>
-
-  </div>
-</nav>
-
-<!-- Main Content -->
-<main class="dashboard-main">
-  <div class="container" *ngIf="!isLoading; else loadingTemplate">
     
-    <!-- Overview Tab -->
-    <div *ngIf="activeTab === 'overview'" class="tab-content">
-      <!-- Stats Cards -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon orders">📋</div>
-          <div class="stat-content">
-            <h3>{{ stats.total_orders }}</h3>
-            <p>Total Orders</p>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon revenue">💰</div>
-          <div class="stat-content">
-            <h3>{{ formatCurrency(stats.total_revenue) }}</h3>
-            <p>Total Revenue</p>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon products">📦</div>
-          <div class="stat-content">
-            <h3>{{ stats.total_products }}</h3>
-            <p>Products</p>
-          </div>
-        </div>
-        
-        <div class="stat-card" [class.warning]="stats.low_stock_products > 0">
-          <div class="stat-icon stock">⚠️</div>
-          <div class="stat-content">
-            <h3>{{ stats.low_stock_products }}</h3>
-            <p>Low Stock</p>
-          </div>
+    <nav class="sidebar-nav">
+      <ul class="nav-list">
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="activeTab === 'overview'" (click)="setActiveTab('overview')">
+            <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7" rx="1"/>
+              <rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/>
+              <rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+            <span class="nav-text" *ngIf="!sidebarCollapsed">Overview</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="activeTab === 'products'" (click)="setActiveTab('products')">
+            <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="3.27,6.96 12,12.01 20.73,6.96"/>
+              <line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+            <span class="nav-text" *ngIf="!sidebarCollapsed">Products</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="activeTab === 'orders'" (click)="setActiveTab('orders')">
+            <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14,2 14,8 20,8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10,9 9,9 8,9"/>
+            </svg>
+            <span class="nav-text" *ngIf="!sidebarCollapsed">Orders</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    
+    <div class="sidebar-footer">
+      <button class="logout-btn-full" (click)="logout()">
+        <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16,17 21,12 16,7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        <span class="nav-text" *ngIf="!sidebarCollapsed">Logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div class="main-wrapper">
+    
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="header-left">
+        <button class="mobile-menu-btn" (click)="toggleMobileMenu()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <div class="page-title">
+          <h1>{{ activeTab === 'overview' ? 'Dashboard Overview' : activeTab === 'products' ? 'Product Management' : 'Order Management' }}</h1>
+          <p class="breadcrumb">Welcome back, {{ getUserName() }}</p>
         </div>
       </div>
-
-      <!-- Quick Actions -->
-      <div class="quick-actions">
-        <h2>Quick Actions</h2>
-        <div class="action-buttons">
-          <button class="action-btn primary" (click)="navigateToProducts()">
-            <i class="icon">➕</i>
-            Add Product
-          </button>
-          <button class="action-btn secondary" (click)="navigateToOrders()">
-            <i class="icon">👁️</i>
-            View Orders
-          </button>
-          <button class="action-btn" (click)="refreshStats()">
-            <i class="icon">🔄</i>
-            Refresh Data
-          </button>
+      
+      <div class="header-right">
+        <button class="refresh-btn" (click)="refreshStats()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23,4 23,10 17,10"/>
+            <path d="M20.49,15a9,9,0,1,1-2.12-9.36L23,10"/>
+          </svg>
+        </button>
+        
+        <div class="user-dropdown" (click)="toggleUserDropdown()">
+          <div class="user-avatar">
+            <span>{{ getUserName()?.charAt(0) || 'U' }}</span>
+          </div>
+          <span class="user-name">{{ getUserName() }}</span>
+          <svg class="dropdown-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6,9 12,15 18,9"/>
+          </svg>
         </div>
       </div>
+    </header>
 
-      <!-- Recent Orders -->
-      <div class="recent-orders">
-        <h2>Recent Orders</h2>
-        <div class="orders-list">
-          <div class="order-item" *ngFor="let order of stats.recent_orders.slice(0, 5)">
-            <div class="order-info">
-              <span class="order-id">#{{ order.id }}</span>
-              <span class="customer-email">{{ order.user_email }}</span>
-              <span class="order-date">{{ formatDate(order.created_at) }}</span>
+    <!-- Main Content -->
+    <main class="main-content">
+      
+      <!-- Loading State -->
+      <div class="loading-state" *ngIf="isLoading">
+        <div class="loading-spinner"></div>
+        <p>Loading dashboard data...</p>
+      </div>
+
+      <!-- Overview Tab -->
+      <div class="tab-panel" *ngIf="!isLoading && activeTab === 'overview'">
+        
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-header">
+              <div class="stat-icon-wrap orders">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14,2 14,8 20,8"/>
+                </svg>
+              </div>
+              <span class="stat-trend positive">+12%</span>
             </div>
-            <div class="order-details">
-              <span class="order-amount">{{ formatCurrency(order.total_amount) }}</span>
-              <span class="order-status" [style.background-color]="getStatusColor(order.delivery_status)">
-                {{ order.delivery_status }}
-              </span>
-              <span class="items-count">{{ order.items_count }} items</span>
-            </div>
+            <div class="stat-value">{{ stats.total_orders }}</div>
+            <div class="stat-label">Total Orders</div>
           </div>
           
-          <div *ngIf="stats.recent_orders.length === 0" class="no-data">
-            <p>No recent orders found</p>
+          <div class="stat-card">
+            <div class="stat-header">
+              <div class="stat-icon-wrap revenue">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="1" x2="12" y2="23"/>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+              </div>
+              <span class="stat-trend positive">+8%</span>
+            </div>
+            <div class="stat-value">{{ formatCurrency(stats.total_revenue) }}</div>
+            <div class="stat-label">Total Revenue</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-header">
+              <div class="stat-icon-wrap products">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-value">{{ stats.total_products }}</div>
+            <div class="stat-label">Total Products</div>
+          </div>
+          
+          <div class="stat-card" [class.warning]="stats.low_stock_products > 0">
+            <div class="stat-header">
+              <div class="stat-icon-wrap stock">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              </div>
+            </div>
+            <div class="stat-value">{{ stats.low_stock_products }}</div>
+            <div class="stat-label">Low Stock Items</div>
           </div>
         </div>
-        
-        <button class="view-all-btn" (click)="navigateToOrders()">View All Orders</button>
+
+        <!-- Action Cards -->
+        <div class="action-cards">
+          
+          <div class="action-card secondary" (click)="navigateToOrders()">
+            <div class="action-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="9" cy="21" r="1"/>
+                <circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+              </svg>
+            </div>
+            <div class="action-content">
+              <h3>View Orders</h3>
+              <p>Manage customer orders</p>
+            </div>
+            <svg class="action-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="content-grid">
+          
+          <!-- Recent Orders -->
+          <div class="content-card">
+            <div class="card-header">
+              <h2>Recent Orders</h2>
+              <button class="view-all-link" (click)="navigateToOrders()">View All</button>
+            </div>
+            <div class="orders-list">
+              <div class="order-row" *ngFor="let order of stats.recent_orders.slice(0, 5)">
+                <div class="order-main">
+                  <span class="order-id">#{{ order.id }}</span>
+                  <span class="customer-email">{{ order.user_email }}</span>
+                </div>
+                <div class="order-meta">
+                  <span class="order-amount">{{ formatCurrency(order.total_amount) }}</span>
+                  <span class="order-status" [attr.data-status]="order.delivery_status">
+                    {{ order.delivery_status }}
+                  </span>
+                </div>
+              </div>
+              <div class="empty-state" *ngIf="stats.recent_orders.length === 0">
+                <p>No recent orders found</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Selling Products -->
+          <div class="content-card">
+            <div class="card-header">
+              <h2>Top Selling Products</h2>
+            </div>
+            <div class="products-list">
+              <div class="product-row" *ngFor="let product of stats.top_selling_products">
+                <div class="product-thumb">
+                  <div class="thumb-placeholder">📷</div>
+                </div>
+                <div class="product-details">
+                  <h4>{{ product.title }}</h4>
+                  <span class="product-category">{{ product.category }}</span>
+                </div>
+                <div class="product-stats-mini">
+                  <span class="sold-count">{{ product.quantity_sold }} sold</span>
+                  <span class="revenue-amount">{{ formatCurrency(product.revenue) }}</span>
+                </div>
+              </div>
+              <div class="empty-state" *ngIf="stats.top_selling_products.length === 0">
+                <p>No sales data available</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <!-- Top Selling Products -->
-      <div class="top-products">
-        <h2>Top Selling Products</h2>
-        <div class="products-grid">
-          <div class="product-card" *ngFor="let product of stats.top_selling_products">
-            <div class="product-image">
-              <div class="placeholder-image">📷</div>
+      <!-- Products Tab -->
+      <div class="tab-panel" *ngIf="!isLoading && activeTab === 'products'">
+        
+        <!-- Products Toolbar -->
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <div class="search-box">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input type="text" placeholder="Search products..." [(ngModel)]="searchQuery" (input)="filterProducts()">
+            </div>
+            <select class="category-select" [(ngModel)]="selectedCategory" (change)="onCategoryChange()">
+              <option value="">All Categories</option>
+              <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+            </select>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn-icon" (click)="loadProducts()" [disabled]="isLoadingProducts">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23,4 23,10 17,10"/>
+                <path d="M20.49,15a9,9,0,1,1-2.12-9.36L23,10"/>
+              </svg>
+            </button>
+            <button class="btn-primary" (click)="openAddProductForm()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Add Product
+            </button>
+          </div>
+        </div>
+
+        <!-- Add Product Modal -->
+        <div class="modal-overlay" *ngIf="showAddProductForm" (click)="closeAddProductForm()">
+          <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h2>Add New Product</h2>
+              <button class="modal-close" (click)="closeAddProductForm()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            <form class="product-form" (ngSubmit)="addProduct()">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Category *</label>
+                  <select [(ngModel)]="newProduct.category" name="category" required>
+                    <option value="">Select Category</option>
+                    <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+                    <option value="New Category">+ Add New Category</option>
+                  </select>
+                  <input 
+                    *ngIf="newProduct.category === 'New Category'" 
+                    type="text" 
+                    placeholder="Enter new category name"
+                    [(ngModel)]="newProduct.category"
+                    name="newCategory"
+                    class="mt-2">
+                </div>
+                <div class="form-group">
+                  <label>Product Title *</label>
+                  <input type="text" [(ngModel)]="newProduct.title" name="title" placeholder="Enter product title" required>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label>Description *</label>
+                <textarea [(ngModel)]="newProduct.description" name="description" rows="3" placeholder="Enter product description" required></textarea>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Price (Rs) *</label>
+                  <input type="number" [(ngModel)]="newProduct.price" name="price" min="0" step="1" placeholder="0" required>
+                </div>
+                <div class="form-group">
+                  <label>Discounted Price (Rs)</label>
+                  <input type="number" [(ngModel)]="newProduct.discounted_price" name="discounted_price" min="0" step="1" placeholder="Optional">
+                </div>
+                <div class="form-group">
+                  <label>Stock *</label>
+                  <input type="number" [(ngModel)]="newProduct.stock" name="stock" min="0" placeholder="0" required>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label>Product Images</label>
+                <div class="file-upload-area">
+                  <input type="file" (change)="onImageSelected($event)" multiple accept="image/*" id="imageUpload">
+                  <label for="imageUpload" class="upload-label">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="17,8 12,3 7,8"/>
+                      <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    <span>Drop files here or click to upload</span>
+                  </label>
+                </div>
+                <div class="image-previews" *ngIf="imagePreviews.length > 0">
+                  <div class="preview-item" *ngFor="let preview of imagePreviews; let i = index">
+                    <img [src]="preview" alt="Preview">
+                    <button type="button" class="remove-image" (click)="removeImage(i)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="form-actions">
+                <button type="button" class="btn-secondary" (click)="closeAddProductForm()">Cancel</button>
+                <button type="submit" class="btn-primary" [disabled]="isSubmitting">
+                  {{ isSubmitting ? 'Adding...' : 'Add Product' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="products-grid" *ngIf="!isLoadingProducts; else loadingTemplate">
+          <div class="product-card" *ngFor="let product of filteredProducts">
+            <div class="product-image-wrap">
+              <img 
+                *ngIf="product.images && product.images.length > 0" 
+                [src]="getProductImageUrl(product)" 
+                [alt]="product.title"
+                class="product-img"
+                (error)="handleImageError($event)">
+              <div *ngIf="!product.images || product.images.length === 0" class="no-image-placeholder">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21,15 16,10 5,21"/>
+                </svg>
+              </div>
+              <span class="stock-badge" [attr.data-stock]="getStockStatus(product.stock)">
+                {{ getStockStatus(product.stock) }}
+              </span>
             </div>
             <div class="product-info">
-              <h4>{{ product.title }}</h4>
-              <p class="category">{{ product.category }}</p>
-              <div class="product-stats">
-                <span class="sold">{{ product.quantity_sold }} sold</span>
-                <span class="revenue">{{ formatCurrency(product.revenue) }}</span>
-                <span class="stock" [class.low-stock]="product.stock < 10">
-                  Stock: {{ product.stock }}
+              <h3 class="product-title">{{ product.title }}</h3>
+              <span class="product-category">{{ product.category }}</span>
+              <p class="product-description">{{ product.description }}</p>
+              <div class="product-pricing">
+                <span class="current-price" *ngIf="product.discounted_price && product.discounted_price < product.price">
+                  {{ formatCurrency(product.discounted_price) }}
                 </span>
+                <span class="original-price" *ngIf="product.discounted_price && product.discounted_price < product.price">
+                  {{ formatCurrency(product.price) }}
+                </span>
+                <span class="current-price" *ngIf="!product.discounted_price || product.discounted_price >= product.price">
+                  {{ formatCurrency(product.price) }}
+                </span>
+              </div>
+              <div class="product-footer">
+                <span class="stock-info">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                  </svg>
+                  {{ product.stock }} units
+                </span>
+                <div class="product-actions">
+                  <button class="btn-icon-sm" (click)="openEditProduct(product)" title="Edit">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                  <button class="btn-icon-sm delete" (click)="deleteProduct(product)" title="Delete">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3,6 5,6 21,6"/>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
           
-          <div *ngIf="stats.top_selling_products.length === 0" class="no-data">
-            <p>No sales data available</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Products Tab -->
-    <div *ngIf="activeTab === 'products'" class="tab-content">
-      <div class="section-header">
-        <h2>Product Management</h2>
-        <div class="header-actions">
-          <button class="btn-secondary" (click)="loadProducts()" [disabled]="isLoadingProducts">
-            <i class="icon">🔄</i>
-            {{ isLoadingProducts ? 'Loading...' : 'Refresh' }}
-          </button>
-          <button class="btn-primary" (click)="navigateToProducts()">
-            <i class="icon">➕</i>
-            Add New Product
-          </button>
-        </div>
-      </div>
-      
-      <!-- Products Grid -->
-      <div class="products-grid" *ngIf="!isLoadingProducts; else loadingProductsTemplate">
-        <div class="product-card" *ngFor="let product of products">
-          <div class="product-image">
-            <img 
-              *ngIf="product.images && product.images.length > 0" 
-              [src]="getProductImageUrl(product)" 
-              [alt]="product.title"
-              class="product-img"
-              (error)="handleImageError($event)">
-            <div *ngIf="!product.images || product.images.length === 0" class="no-image">
-              📷
+          <div class="empty-products" *ngIf="products.length === 0">
+            <div class="empty-icon">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              </svg>
             </div>
-            
-            <div class="stock-badge" [style.background-color]="getStockColor(product.stock)">
-              {{ getStockStatus(product.stock) }}
-            </div>
-          </div>
-          
-          <div class="product-info">
-            <h3 class="product-title">{{ product.title }}</h3>
-            <p class="product-category">{{ product.category }}</p>
-            <p class="product-description">{{ product.description }}</p>
-            
-            <div class="product-pricing">
-              <span class="current-price" *ngIf="product.discounted_price && product.discounted_price < product.price">
-                {{ formatCurrency(product.discounted_price) }}
-              </span>
-              <span class="original-price" *ngIf="product.discounted_price && product.discounted_price < product.price">
-                {{ formatCurrency(product.price) }}
-              </span>
-              <span class="current-price" *ngIf="!product.discounted_price || product.discounted_price >= product.price">
-                {{ formatCurrency(product.price) }}
-              </span>
-            </div>
-            
-            <div class="product-stock">
-              <span class="stock-info">Stock: {{ product.stock }} units</span>
-            </div>
-            
-            <div class="product-actions">
-              <button class="edit-btn" (click)="openEditProduct(product)">
-                <i class="icon">✏️</i>
-                Edit
-              </button>
-              <button class="delete-btn" (click)="deleteProduct(product)">
-                <i class="icon">🗑️</i>
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        <div *ngIf="products.length === 0" class="no-products">
-          <div class="no-products-content">
-            <h3>No products found</h3>
-            <p>Start by adding your first product to your store.</p>
-            <button class="add-first-product-btn" (click)="navigateToProducts()">
+            <h3>No products yet</h3>
+            <p>Start by adding your first product to your store</p>
+            <button class="btn-primary" (click)="openAddProductForm()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
               Add Your First Product
             </button>
           </div>
         </div>
+
+        <!-- Loading Template -->
+        <ng-template #loadingTemplate>
+          <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p>Loading products...</p>
+          </div>
+        </ng-template>
       </div>
 
-      <!-- Loading Products Template -->
-      <ng-template #loadingProductsTemplate>
-        <div class="loading-container">
-          <div class="loading-spinner"></div>
-          <p>Loading products...</p>
-        </div>
-      </ng-template>
-    </div>
-
-    <!-- Orders Tab -->
-    <div *ngIf="activeTab === 'orders'" class="tab-content">
-      <div class="section-header">
-        <h2>Order Management</h2>
-        <button class="btn-secondary" (click)="navigateToOrders()">
-          <i class="icon">👁️</i>
-          View All Orders
-        </button>
-      </div>
-      
-      <div class="coming-soon">
-        <div class="coming-soon-content">
-          <h3>📋 Advanced Order Management</h3>
-          <p>Complete order management interface is being built...</p>
-          <ul>
-            <li>✅ View and filter orders by status</li>
-            <li>✅ Accept/Reject orders with reasons</li>
-            <li>✅ Order tracking and updates</li>
-            <li>✅ Customer communication</li>
-            <li>🔄 Bulk order operations</li>
-            <li>🔄 Order analytics and reporting</li>
+      <!-- Orders Tab -->
+      <div class="tab-panel" *ngIf="!isLoading && activeTab === 'orders'">
+        <div class="coming-soon-card">
+          <div class="coming-soon-icon">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14,2 14,8 20,8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+          </div>
+          <h2>Order Management</h2>
+          <p>Advanced order management features coming soon</p>
+          <ul class="features-list">
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20,6 9,17 4,12"/>
+              </svg>
+              View and filter orders by status
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20,6 9,17 4,12"/>
+              </svg>
+              Accept/Reject orders with reasons
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20,6 9,17 4,12"/>
+              </svg>
+              Order tracking and updates
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20,6 9,17 4,12"/>
+              </svg>
+              Bulk order operations
+            </li>
           </ul>
-          <button class="btn-secondary" (click)="navigateToOrders()">
+          <button class="btn-primary" (click)="navigateToOrders()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14,2 14,8 20,8"/>
+            </svg>
             View Basic Orders Page
           </button>
         </div>
       </div>
-    </div>
-
-
-
+    </main>
   </div>
+</div>
 
-  <!-- Loading Template -->
-  <ng-template #loadingTemplate>
-    <div class="loading-container">
-      <div class="loading-spinner"></div>
-      <p>Loading dashboard...</p>
-    </div>
-  </ng-template>
-</main>
+<!-- Mobile Overlay -->
+<div class="mobile-overlay" *ngIf="mobileMenuOpen" (click)="toggleMobileMenu()"></div>

@@ -36,7 +36,8 @@ def add_product():
             "description": description,
             "price": price,
             "discounted_price": discounted_price,
-            "stock": stock
+            "stock": stock,
+            "status": "pending"
         }
         product_response = supabase.table("products").insert(product_data).execute()
         product_id = product_response.data[0]["id"]

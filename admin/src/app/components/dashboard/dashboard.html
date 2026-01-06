@@ -12,47 +12,104 @@
   </div>
 </header>
 
+<!-- Navigation Tabs -->
+<nav class="dashboard-nav">
+  <div class="nav-container">
+    <button 
+      class="nav-tab" 
+      [class.active]="activeTab === 'overview'"
+      (click)="setActiveTab('overview')">
+      <i class="icon">📊</i>
+      Overview
+    </button>
+    <button 
+      class="nav-tab" 
+      [class.active]="activeTab === 'pending'"
+      (click)="setActiveTab('pending')">
+      <i class="icon">⏳</i>
+      Pending Approvals
+      <span class="badge" *ngIf="stats.pending_products > 0">{{ stats.pending_products }}</span>
+    </button>
+    <button 
+      class="nav-tab" 
+      [class.active]="activeTab === 'approved'"
+      (click)="setActiveTab('approved')">
+      <i class="icon">✅</i>
+      Approved
+    </button>
+    <button 
+      class="nav-tab" 
+      [class.active]="activeTab === 'rejected'"
+      (click)="setActiveTab('rejected')">
+      <i class="icon">❌</i>
+      Rejected
+    </button>
+  </div>
+</nav>
+
 <!-- Main Content -->
 <main class="dashboard-main">
   <div class="container">
     
-    <!-- Stats Cards -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon pending">⏳</div>
-        <div class="stat-content">
-          <h3>{{ stats.pending_products }}</h3>
-          <p>Pending Approvals</p>
+    <!-- Overview Tab -->
+    <div *ngIf="activeTab === 'overview'" class="tab-content">
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon pending">⏳</div>
+          <div class="stat-content">
+            <h3>{{ stats.pending_products }}</h3>
+            <p>Pending Approvals</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon approved">✅</div>
+          <div class="stat-content">
+            <h3>{{ stats.approved_products }}</h3>
+            <p>Approved Products</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon rejected">❌</div>
+          <div class="stat-content">
+            <h3>{{ stats.rejected_products }}</h3>
+            <p>Rejected Products</p>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon retailers">🏪</div>
+          <div class="stat-content">
+            <h3>{{ stats.total_retailers }}</h3>
+            <p>Active Retailers</p>
+          </div>
         </div>
       </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon approved">✅</div>
-        <div class="stat-content">
-          <h3>{{ stats.approved_products }}</h3>
-          <p>Approved Products</p>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon rejected">❌</div>
-        <div class="stat-content">
-          <h3>{{ stats.rejected_products }}</h3>
-          <p>Rejected Products</p>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon retailers">🏪</div>
-        <div class="stat-content">
-          <h3>{{ stats.total_retailers }}</h3>
-          <p>Active Retailers</p>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions">
+        <h2>Quick Actions</h2>
+        <div class="action-buttons">
+          <button class="action-btn primary" (click)="setActiveTab('pending')">
+            <i class="icon">⏳</i>
+            Review Pending
+          </button>
+          <button class="action-btn secondary" (click)="setActiveTab('approved')">
+            <i class="icon">✅</i>
+            View Approved
+          </button>
+          <button class="action-btn" (click)="loadPendingProducts()">
+            <i class="icon">🔄</i>
+            Refresh Data
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Product Approval Section -->
-    <div class="product-approval-section">
+    <!-- Pending Approvals Tab -->
+    <div *ngIf="activeTab === 'pending'" class="tab-content">
       <div class="section-header">
         <h2>Product Approval Queue</h2>
         <div class="header-actions">
@@ -63,9 +120,18 @@
         </div>
       </div>
       
+      <!-- Category Filter -->
+      <div class="category-filter">
+        <label>Filter by Category:</label>
+        <select [(ngModel)]="selectedCategory" (change)="filterProducts()">
+          <option value="">All Categories</option>
+          <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+        </select>
+      </div>
+      
       <!-- Pending Products -->
-      <div class="products-grid" *ngIf="!isLoading && pendingProducts.length > 0; else noProductsTemplate">
-        <div class="product-card" *ngFor="let product of pendingProducts">
+      <div class="products-grid" *ngIf="!isLoading && filteredProducts.length > 0; else noProductsTemplate">
+        <div class="product-card" *ngFor="let product of filteredProducts">
           <div class="product-image">
             <img 
               *ngIf="product.images && product.images.length > 0" 
@@ -117,22 +183,134 @@
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- No Products Template -->
-      <ng-template #noProductsTemplate>
-        <div class="no-products" *ngIf="!isLoading">
-          <div class="no-products-content">
-            <h3>🎉 All Caught Up!</h3>
-            <p>No products pending approval at the moment.</p>
+    <!-- Approved Products Tab -->
+    <div *ngIf="activeTab === 'approved'" class="tab-content">
+      <div class="section-header">
+        <h2>Approved Products</h2>
+        <div class="header-actions">
+          <button class="btn-secondary" (click)="loadApprovedProducts()" [disabled]="isLoading">
+            <i class="icon">🔄</i>
+            {{ isLoading ? 'Loading...' : 'Refresh' }}
+          </button>
+        </div>
+      </div>
+      
+      <div class="products-grid" *ngIf="!isLoading && approvedProducts.length > 0; else noApprovedTemplate">
+        <div class="product-card" *ngFor="let product of approvedProducts">
+          <div class="product-image">
+            <img 
+              *ngIf="product.images && product.images.length > 0" 
+              [src]="getProductImageUrl(product)" 
+              [alt]="product.title"
+              class="product-img"
+              (error)="handleImageError($event)">
+            <div *ngIf="!product.images || product.images.length === 0" class="no-image">
+              📷
+            </div>
+            <div class="approval-badge approved">
+              Approved
+            </div>
+          </div>
+          <div class="product-info">
+            <h3 class="product-title">{{ product.title }}</h3>
+            <p class="product-category">{{ product.category }}</p>
+            <p class="product-description">{{ product.description }}</p>
+            <div class="product-pricing">
+              <span class="current-price">{{ formatCurrency(product.price) }}</span>
+            </div>
+            <div class="product-details">
+              <span class="retailer-info">👤 {{ product.retailer_name || 'Unknown' }}</span>
+              <span class="stock-info">📦 {{ product.stock }} units</span>
+            </div>
           </div>
         </div>
-        
-        <div class="loading-container" *ngIf="isLoading">
-          <div class="loading-spinner"></div>
-          <p>Loading pending products...</p>
+      </div>
+      
+      <ng-template #noApprovedTemplate>
+        <div class="no-products" *ngIf="!isLoading">
+          <div class="no-products-content">
+            <h3>No Approved Products</h3>
+            <p>Products approved by admins will appear here.</p>
+          </div>
         </div>
       </ng-template>
     </div>
+
+    <!-- Rejected Products Tab -->
+    <div *ngIf="activeTab === 'rejected'" class="tab-content">
+      <div class="section-header">
+        <h2>Rejected Products</h2>
+        <div class="header-actions">
+          <button class="btn-secondary" (click)="loadRejectedProducts()" [disabled]="isLoading">
+            <i class="icon">🔄</i>
+            {{ isLoading ? 'Loading...' : 'Refresh' }}
+          </button>
+        </div>
+      </div>
+      
+      <div class="products-grid" *ngIf="!isLoading && rejectedProducts.length > 0; else noRejectedTemplate">
+        <div class="product-card" *ngFor="let product of rejectedProducts">
+          <div class="product-image">
+            <img 
+              *ngIf="product.images && product.images.length > 0" 
+              [src]="getProductImageUrl(product)" 
+              [alt]="product.title"
+              class="product-img"
+              (error)="handleImageError($event)">
+            <div *ngIf="!product.images || product.images.length === 0" class="no-image">
+              📷
+            </div>
+            <div class="approval-badge rejected">
+              Rejected
+            </div>
+          </div>
+          <div class="product-info">
+            <h3 class="product-title">{{ product.title }}</h3>
+            <p class="product-category">{{ product.category }}</p>
+            <p class="product-description">{{ product.description }}</p>
+            <div class="product-pricing">
+              <span class="current-price">{{ formatCurrency(product.price) }}</span>
+            </div>
+            <div class="product-details">
+              <span class="retailer-info">👤 {{ product.retailer_name || 'Unknown' }}</span>
+              <span class="stock-info">📦 {{ product.stock }} units</span>
+            </div>
+            <div class="rejection-reason" *ngIf="product.admin_comment">
+              <strong>Reason:</strong> {{ product.admin_comment }}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <ng-template #noRejectedTemplate>
+        <div class="no-products" *ngIf="!isLoading">
+          <div class="no-products-content">
+            <h3>No Rejected Products</h3>
+            <p>Products rejected by admins will appear here.</p>
+          </div>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- No Products Template for Pending -->
+    <ng-template #noProductsTemplate>
+      <div class="no-products" *ngIf="!isLoading">
+        <div class="no-products-content">
+          <h3>🎉 All Caught Up!</h3>
+          <p>No products pending approval at the moment.</p>
+          <button class="btn-primary" (click)="setActiveTab('overview')">
+            Back to Overview
+          </button>
+        </div>
+      </div>
+      
+      <div class="loading-container" *ngIf="isLoading">
+        <div class="loading-spinner"></div>
+        <p>Loading products...</p>
+      </div>
+    </ng-template>
 
   </div>
 </main>
