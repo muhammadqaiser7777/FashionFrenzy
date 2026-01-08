@@ -7,6 +7,9 @@ from controllers.user.passwordController import (
     change_password, password_forget, verify_identity, set_new_password
 )
 from controllers.user.otpController import otpRefresh, validate_otp
+from controllers.user.viewProduct import view_top_products, get_product_by_id, search_products
+from controllers.user.cartController import add_to_cart, remove_from_cart, view_cart
+from controllers.user.orderController import place_order, view_orders
 
 from controllers.retailer.retailerAuthController import (
     retailerSignup, retailerVerify, retailerLogin, retailerLogout

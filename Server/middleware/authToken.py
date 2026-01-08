@@ -60,6 +60,27 @@ def generate_auth_token_admin(username):
     token = jwt.encode(payload, SECRET_KEY_ADMIN, algorithm="HS256")
     return token
 
+def verify_user_token(auth_token):
+    """Verify user auth_token and return email if valid."""
+    try:
+        payload = jwt.decode(auth_token, SECRET_KEY_USER, algorithms=["HS256"])
+        email = payload.get("email")
+        if not email:
+            return None
+        # Check in table
+        from config.supabaseConfig import supabase
+        user_response = supabase.table("users").select("email").eq("auth_token", auth_token).execute()
+        if user_response.data:
+            return user_response.data[0]["email"]
+        return None
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+    except Exception as e:
+        print(f"Error verifying user token: {str(e)}")
+        return None
+
 def verify_retailer_token(auth_token):
     """Verify retailer auth_token and return email if valid."""
     try:
